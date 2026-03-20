@@ -3,17 +3,16 @@
 import { useState, useEffect, useRef } from 'react'
 import {
   Search, Heart, Bed, Bath, MapPin, SlidersHorizontal,
-  List, Map, ChevronDown, X, Clock, Phone,
-  Mail, MessageSquare, Moon, Sunset, Sun, ChevronRight,
-  Home, Trees, PawPrint, Building2, Check, Sparkles,
-  TrendingUp, Star, ArrowUpRight, Filter, LayoutGrid,
-  Maximize2, Calendar, DollarSign, AlertCircle, User
+  List, Map, ChevronDown, X, Clock, MessageSquare,
+  Moon, Sunset, Sun, Home, Check, Sparkles,
+  TrendingUp, ArrowUpRight, LayoutGrid, Maximize2,
+  DollarSign, AlertCircle, User, Phone, Mail
 } from 'lucide-react'
 import { THEMES } from './themes'
 import { DEMO_LISTINGS, formatPrice } from './data'
 import AccordionSection from './AccordionSection'
 
-export default function Home() {
+export default function ZephyrPage() {
   const [colorMode, setColorMode] = useState('dark')
   const [activeTheme, setActiveTheme] = useState(THEMES.realestate.variants[2])
   const [themeCategory, setThemeCategory] = useState('realestate')
@@ -82,7 +81,10 @@ export default function Home() {
   }, [])
 
   const closeAllFilters = () => {
-    setPriceOpen(false); setBedsOpen(false); setTypeOpen(false); setSortOpen(false)
+    setPriceOpen(false)
+    setBedsOpen(false)
+    setTypeOpen(false)
+    setSortOpen(false)
   }
 
   const handleSearch = (e) => {
@@ -146,13 +148,15 @@ export default function Home() {
   const dropdown = {
     position: 'absolute', top: '100%', left: 0, marginTop: '8px',
     backgroundColor: c.surface, border: `1px solid ${c.border}`,
-    borderRadius: '14px', boxShadow: `0 16px 48px rgba(0,0,0,0.3)`,
+    borderRadius: '14px', boxShadow: '0 16px 48px rgba(0,0,0,0.3)',
     padding: '16px', zIndex: 200,
   }
 
   const statusBg = (s) => ({
-    'Active': '#16a34a', 'Pending': '#ea580c',
-    'Coming Soon': t.accent, 'Active Under Contract': '#ca8a04',
+    'Active': '#16a34a',
+    'Pending': '#ea580c',
+    'Coming Soon': t.accent,
+    'Active Under Contract': '#ca8a04',
   }[s] || '#6b7280')
 
   return (
@@ -160,8 +164,8 @@ export default function Home() {
 
       {/* ── HEADER ── */}
       <header style={{ backgroundColor: c.headerBg, borderBottom: `1px solid ${c.border}`, padding: '0 20px', height: '58px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, zIndex: 100 }}>
-
         <div style={{ display: 'flex', alignItems: 'center', gap: '28px' }}>
+          {/* Logo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: t.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 0 16px ${t.accentGlow}` }}>
               <span style={{ color: '#fff', fontWeight: 900, fontSize: '18px' }}>Z</span>
@@ -171,7 +175,7 @@ export default function Home() {
               <div style={{ fontWeight: 700, fontSize: '10px', color: t.accent, letterSpacing: '1.5px', textTransform: 'uppercase' }}>IDX Platform</div>
             </div>
           </div>
-
+          {/* Nav */}
           <nav style={{ display: 'flex', gap: '2px' }}>
             {navItems.map(item => (
               <button key={item} onClick={() => setActiveNav(item)}
@@ -199,7 +203,6 @@ export default function Home() {
               style={{ width: '38px', height: '38px', borderRadius: '10px', border: `1px solid ${contactOpen ? t.accent : c.border}`, background: contactOpen ? `${t.accent}15` : c.surfaceAlt, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: contactOpen ? t.accent : c.textMuted, transition: 'all 0.2s' }}>
               <MessageSquare size={17} />
             </button>
-
             {contactOpen && (
               <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', backgroundColor: c.surface, border: `1px solid ${c.border}`, borderRadius: '14px', boxShadow: '0 16px 48px rgba(0,0,0,0.3)', padding: '16px', zIndex: 200, width: '300px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
@@ -257,7 +260,6 @@ export default function Home() {
                     <p style={{ fontSize: '12px', color: c.textMuted, margin: 0 }}>Sign in to save homes</p>
                   </div>
                 </div>
-
                 {[
                   { label: '🏠 My Listings', items: ['Saved Homes', 'Recent Searches', 'Home Alerts', 'Visited Homes'] },
                   { label: '⚙️ Settings', items: ['Account Settings', 'Notifications', 'Privacy', 'Appearance'] },
@@ -274,7 +276,6 @@ export default function Home() {
                     THEMES={THEMES}
                   />
                 ))}
-
                 <div style={{ borderTop: `1px solid ${c.border}`, marginTop: '8px', paddingTop: '8px' }}>
                   <button style={{ width: '100%', padding: '10px', borderRadius: '8px', border: 'none', background: `${t.accent}15`, color: t.accent, cursor: 'pointer', fontSize: '13px', fontWeight: 700 }}>
                     Sign In / Register
@@ -487,7 +488,7 @@ export default function Home() {
                     onMouseEnter={() => setHoveredCard(listing.id)}
                     onMouseLeave={() => setHoveredCard(null)}
                     style={{ background: c.cardBg, borderRadius: '16px', overflow: 'hidden', border: `1px solid ${isHovered ? t.accent + '60' : c.border}`, cursor: 'pointer', transition: 'all 0.25s', boxShadow: isHovered ? `${t.cardGlow}, 0 8px 32px rgba(0,0,0,0.15)` : '0 1px 4px rgba(0,0,0,0.06)', transform: isHovered ? 'translateY(-3px)' : 'none', display: viewMode === 'list' ? 'flex' : 'block' }}>
-                    <div style={{ position: 'relative', height: viewMode === 'list' ? '100%' : '190px', width: viewMode === 'list' ? '220px' : '100%', flexShrink: 0, overflow: 'hidden', background: c.surfaceAlt }}>
+                    <div style={{ position: 'relative', height: viewMode === 'list' ? '160px' : '190px', width: viewMode === 'list' ? '220px' : '100%', flexShrink: 0, overflow: 'hidden', background: c.surfaceAlt }}>
                       <img src={listing.photo} alt={listing.address} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s', transform: isHovered ? 'scale(1.05)' : 'scale(1)', display: 'block' }} />
                       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 55%)' }} />
                       <div style={{ position: 'absolute', top: '10px', left: '10px', display: 'flex', gap: '5px' }}>
