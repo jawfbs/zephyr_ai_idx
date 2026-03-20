@@ -1,280 +1,104 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
+import { X, User, Mail, Lock, Eye, EyeOff } from 'lucide-react'
+import { ACCOUNT_LEVELS } from './auth'
 
-const LAYERS = [
-  {
-    id: 'osm',
-    label: '🗺️ Street',
-    url: 'https://{a-c}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    attribution: '© OpenStreetMap contributors',
-  },
-  {
-    id: 'satellite',
-    label: '🛰️ Satellite',
-    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    attribution: '© Esri, Maxar, Earthstar Geographics',
-  },
-  {
-    id: 'topo',
-    label: '⛰️ Topo',
-    url: 'https://{a-c}.tile.opentopomap.org/{z}/{x}/{y}.png',
-    attribution: '© OpenTopoMap',
-  },
-  {
-    id: 'transit',
-    label: '🚌 Transit',
-    url: 'https://tile.memomaps.de/tilegen/{z}/{x}/{y}.png',
-    attribution: '© MemoMaps',
-  },
-  {
-    id: 'dark',
-    label: '🌑 Dark',
-    url: 'https://{a-c}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    attribution: '© CARTO',
-  },
-  {
-    id: 'light',
-    label: '☀️ Light',
-    url: 'https://{a-c}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-    attribution: '© CARTO',
-  },
-  {
-    id: 'watercolor',
-    label: '🎨 Artistic',
-    url: 'https://stamen-tiles.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg',
-    attribution: '© Stamen Design',
-  },
-  {
-    id: 'cycle',
-    label: '🚴 Cycle',
-    url: 'https://{a-c}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png',
-    attribution: '© CyclOSM contributors',
-  },
-]
+export default function SignInModal({ c, t, onClose, onSignIn }) {
+  const [mode,     setMode]     = useState('signin')
+  const [showPass, setShowPass] = useState(false)
+  const [loading,  setLoading]  = useState(false)
+  const [error,    setError]    = useState('')
+  const [email,    setEmail]    = useState('')
+  const [password, setPassword] = useState('')
+  const [firstName,setFirstName]= useState('')
+  const [lastName, setLastName] = useState('')
+  const [level,    setLevel]    = useState('homebuyer')
 
-function buildUrl(url, z, x, y) {
-  return url
-    .replace('{z}', z).replace('{x}', x).replace('{y}', y)
-    .replace('{r}', window.devicePixelRatio > 1 ? '@2x' : '')
-    .replace(/\{a-c\}/g, () => ['a','b','c'][Math.floor(Math.random()*3)])
-}
-
-export default function MapPanel({ listings, t, c, colorMode, onSelectListing, onXP }) {
-  const mapRef    = useRef(null)
-  const olMapRef  = useRef(null)
-  const [activeLayer, setActiveLayer] = useState('osm')
-  const [showLayers,  setShowLayers]  = useState(false)
-  const [olLoaded,    setOlLoaded]    = useState(false)
-  const [popupInfo,   setPopupInfo]   = useState(null)
-  const sourceRef = useRef(null)
-  const vectorRef = useRef(null)
-
-  // Dynamic import of OpenLayers
-  useEffect(() => {
-    let mounted = true
-
-    ;(async () => {
-      try {
-        const [
-          { Map: OLMap, View },
-          { Tile: TileLayer, Vector: VectorLayer },
-          { XYZ, Vector: VectorSource },
-          { Feature },
-          { Point },
-          { Style, Circle: CircleStyle, Fill, Stroke, Text },
-          { fromLonLat },
-        ] = await Promise.all([
-          import('ol'),
-          import('ol/layer'),
-          import('ol/source'),
-          import('ol/Feature'),
-          import('ol/geom/Point'),
-          import('ol/style'),
-          import('ol/proj'),
-        ])
-
-        if (!mounted || !mapRef.current) return
-
-        // tear down old map if re-mounted
-        if (olMapRef.current) { olMapRef.current.setTarget(null); olMapRef.current = null }
-
-        const layer = LAYERS.find(l => l.id === activeLayer) || LAYERS[0]
-
-        const tileSource = new XYZ({
-          url: layer.url.replace('{r}','').replace(/\{a-c\}/g, 'a'),
-          crossOrigin: 'anonymous',
-          attributions: layer.attribution,
-        })
-
-        const tileLayer = new TileLayer({ source: tileSource })
-
-        const features = listings
-          .filter(l => l.lat && l.lon)
-          .map(listing => {
-            const f = new Feature({ geometry: new Point(fromLonLat([listing.lon, listing.lat])) })
-            f.setId(listing.id)
-            f.set('listing', listing)
-            return f
-          })
-
-        const vSource = new VectorSource({ features })
-        sourceRef.current = vSource
-
-        const vLayer = new VectorLayer({
-          source: vSource,
-          style: (f) => {
-            const listing = f.get('listing')
-            return new Style({
-              image: new CircleStyle({
-                radius: 14,
-                fill: new Fill({ color: t.accent }),
-                stroke: new Stroke({ color: '#fff', width: 2.5 }),
-              }),
-              text: new Text({
-                text: listing ? `$${Math.round(listing.price/1000)}k` : '',
-                fill: new Fill({ color: '#ffffff' }),
-                font: 'bold 9px Inter,sans-serif',
-                textBaseline: 'middle',
-              }),
-            })
-          },
-        })
-        vectorRef.current = vLayer
-
-        const center = listings.find(l => l.lat)
-          ? fromLonLat([listings.find(l=>l.lat).lon, listings.find(l=>l.lat).lat])
-          : fromLonLat([-98.5795, 39.8283])
-
-        const map = new OLMap({
-          target: mapRef.current,
-          layers: [tileLayer, vLayer],
-          view: new View({ center, zoom: listings.some(l=>l.lat) ? 11 : 4 }),
-        })
-        olMapRef.current = map
-
-        map.on('click', evt => {
-          const feat = map.forEachFeatureAtPixel(evt.pixel, f => f)
-          if (feat) {
-            const listing = feat.get('listing')
-            if (listing) setPopupInfo({ listing, pixel: evt.pixel })
-          } else {
-            setPopupInfo(null)
-          }
-        })
-
-        map.on('pointermove', evt => {
-          const hit = map.hasFeatureAtPixel(evt.pixel)
-          map.getTargetElement().style.cursor = hit ? 'pointer' : ''
-        })
-
-        if (mounted) setOlLoaded(true)
-      } catch (err) {
-        console.warn('OpenLayers load error — falling back to Leaflet canvas', err)
-        if (mounted) setOlLoaded(false)
-      }
-    })()
-
-    return () => { mounted = false }
-  }, [listings, activeLayer, t.accent])
-
-  // Layer switcher handler
-  const switchLayer = (layerId) => {
-    setActiveLayer(layerId)
-    setShowLayers(false)
-    if (onXP) onXP('CHANGE_MAP_LAYER')
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    setError('')
+    if (!email||!password) { setError('Please fill in all required fields.'); return }
+    if (mode==='register'&&(!firstName||!lastName)) { setError('Please enter your first and last name.'); return }
+    setLoading(true)
+    setTimeout(() => {
+      setLoading(false)
+      onSignIn({ email, firstName:mode==='register'?firstName:email.split('@')[0], lastName:mode==='register'?lastName:'', level:mode==='register'?level:'homebuyer' })
+      onClose()
+    }, 900)
   }
 
+  const inp = { width:'100%', padding:'11px 14px 11px 40px', border:`1px solid ${c.border}`, borderRadius:'10px', fontSize:'14px', background:c.inputBg, color:c.text, outline:'none', boxSizing:'border-box', transition:'border 0.2s' }
+
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.75)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:9999, backdropFilter:'blur(6px)', padding:'16px' }} onClick={onClose}>
+      <div onClick={e=>e.stopPropagation()} style={{ background:c.surface, border:`1px solid ${c.border}`, borderRadius:'20px', width:'100%', maxWidth:'420px', boxShadow:`0 40px 100px rgba(0,0,0,0.5),0 0 0 1px ${t.accent}20`, overflow:'hidden' }}>
 
-      {/* OL map container */}
-      <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
-
-      {/* Layer switcher */}
-      <div style={{
-        position: 'absolute', top: '12px', right: '12px', zIndex: 500,
-      }}>
-        <button
-          onClick={() => setShowLayers(!showLayers)}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '6px',
-            padding: '8px 14px', borderRadius: '10px',
-            background: 'rgba(15,15,25,0.9)', backdropFilter: 'blur(10px)',
-            border: `1px solid ${t.accent}60`, color: '#fff',
-            cursor: 'pointer', fontSize: '13px', fontWeight: 700,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
-          }}>
-          🌐 Layers
-        </button>
-
-        {showLayers && (
-          <div style={{
-            position: 'absolute', top: '100%', right: 0, marginTop: '8px',
-            background: 'rgba(15,15,25,0.95)', backdropFilter: 'blur(16px)',
-            border: `1px solid rgba(255,255,255,0.12)`, borderRadius: '14px',
-            padding: '10px', width: '180px',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
-          }}>
-            <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', padding: '2px 8px 8px', margin: 0 }}>Map Layers</p>
-            {LAYERS.map(layer => (
-              <button key={layer.id}
-                onClick={() => switchLayer(layer.id)}
-                style={{
-                  width: '100%', display: 'flex', alignItems: 'center', gap: '8px',
-                  padding: '8px 10px', borderRadius: '8px', border: 'none',
-                  background: activeLayer === layer.id ? `${t.accent}25` : 'transparent',
-                  color: activeLayer === layer.id ? t.accent : 'rgba(255,255,255,0.8)',
-                  cursor: 'pointer', fontSize: '13px', fontWeight: activeLayer === layer.id ? 700 : 500,
-                  transition: 'all 0.15s', textAlign: 'left',
-                }}
-                onMouseEnter={e => { if (activeLayer !== layer.id) e.currentTarget.style.background = 'rgba(255,255,255,0.08)' }}
-                onMouseLeave={e => { if (activeLayer !== layer.id) e.currentTarget.style.background = 'transparent' }}>
-                {layer.label}
-                {activeLayer === layer.id && <span style={{ marginLeft: 'auto', fontSize: '12px' }}>✓</span>}
-              </button>
-            ))}
+        <div style={{ padding:'24px 24px 0', display:'flex', alignItems:'flex-start', justifyContent:'space-between' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:'12px' }}>
+            <div style={{ width:'44px', height:'44px', borderRadius:'12px', background:t.gradient, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:`0 0 20px ${t.accentGlow}` }}><User size={20} color="#fff" /></div>
+            <div>
+              <p style={{ fontWeight:900, fontSize:'18px', color:c.text, margin:0 }}>{mode==='signin'?'Welcome Back':'Create Account'}</p>
+              <p style={{ fontSize:'12px', color:c.textMuted, margin:0 }}>{mode==='signin'?'Sign in to ZephyrAI IDX':'Join ZephyrAI IDX today'}</p>
+            </div>
           </div>
-        )}
-      </div>
-
-      {/* Popup */}
-      {popupInfo && (
-        <div style={{
-          position: 'absolute',
-          top: `${popupInfo.pixel[1] - 10}px`,
-          left: `${popupInfo.pixel[0] + 10}px`,
-          zIndex: 600,
-          background: 'rgba(15,15,25,0.97)', backdropFilter: 'blur(12px)',
-          border: `1px solid ${t.accent}60`, borderRadius: '14px',
-          padding: '14px', width: '220px',
-          boxShadow: `0 16px 48px rgba(0,0,0,0.6), 0 0 0 1px ${t.accent}20`,
-          pointerEvents: 'auto',
-        }}>
-          <button onClick={() => setPopupInfo(null)}
-            style={{ position: 'absolute', top: '8px', right: '8px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: '14px' }}>✕</button>
-          <img src={popupInfo.listing.photo} alt="" style={{ width: '100%', height: '100px', objectFit: 'cover', borderRadius: '8px', marginBottom: '10px' }} />
-          <p style={{ fontWeight: 900, fontSize: '16px', color: '#fff', margin: '0 0 4px' }}>
-            ${popupInfo.listing.price?.toLocaleString()}
-          </p>
-          <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', margin: '0 0 2px' }}>{popupInfo.listing.address}</p>
-          <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', margin: '0 0 10px' }}>
-            {popupInfo.listing.beds}bd · {popupInfo.listing.baths}ba · {popupInfo.listing.sqft?.toLocaleString()} ft²
-          </p>
-          <button
-            onClick={() => { onSelectListing && onSelectListing(popupInfo.listing); setPopupInfo(null) }}
-            style={{ width: '100%', padding: '8px', borderRadius: '8px', border: 'none', background: t.gradient, color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: '13px', boxShadow: `0 4px 16px ${t.accentGlow}` }}>
-            View Details
-          </button>
+          <button onClick={onClose} style={{ width:'32px', height:'32px', borderRadius:'8px', border:`1px solid ${c.border}`, background:c.surfaceAlt, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:c.textMuted }}><X size={15} /></button>
         </div>
-      )}
 
-      {/* Attribution */}
-      <div style={{
-        position: 'absolute', bottom: '4px', left: '8px', zIndex: 400,
-        fontSize: '9px', color: 'rgba(255,255,255,0.5)',
-        background: 'rgba(0,0,0,0.4)', padding: '2px 6px', borderRadius: '4px',
-      }}>
-        {LAYERS.find(l => l.id === activeLayer)?.attribution}
+        <div style={{ display:'flex', margin:'20px 24px 0', background:c.surfaceAlt, borderRadius:'10px', padding:'4px' }}>
+          {[['signin','Sign In'],['register','Register']].map(([id,label])=>(
+            <button key={id} onClick={()=>{setMode(id);setError('')}} style={{ flex:1, padding:'8px', borderRadius:'7px', border:'none', background:mode===id?t.accent:'transparent', color:mode===id?'#fff':c.textMuted, cursor:'pointer', fontSize:'13px', fontWeight:700, transition:'all 0.2s' }}>{label}</button>
+          ))}
+        </div>
+
+        <form onSubmit={handleSubmit} style={{ padding:'20px 24px 24px' }}>
+          {mode==='register'&&(
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px', marginBottom:'12px' }}>
+              {[['First Name',firstName,setFirstName],['Last Name',lastName,setLastName]].map(([label,val,setter])=>(
+                <div key={label} style={{ position:'relative' }}>
+                  <User size={15} style={{ position:'absolute', left:'12px', top:'50%', transform:'translateY(-50%)', color:c.textFaint, pointerEvents:'none' }} />
+                  <input type="text" placeholder={label} value={val} onChange={e=>setter(e.target.value)} style={inp} onFocus={e=>e.target.style.borderColor=t.accent} onBlur={e=>e.target.style.borderColor=c.border} />
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div style={{ position:'relative', marginBottom:'12px' }}>
+            <Mail size={15} style={{ position:'absolute', left:'12px', top:'50%', transform:'translateY(-50%)', color:c.textFaint, pointerEvents:'none' }} />
+            <input type="email" placeholder="Email address" value={email} onChange={e=>setEmail(e.target.value)} style={inp} onFocus={e=>e.target.style.borderColor=t.accent} onBlur={e=>e.target.style.borderColor=c.border} />
+          </div>
+
+          <div style={{ position:'relative', marginBottom:'16px' }}>
+            <Lock size={15} style={{ position:'absolute', left:'12px', top:'50%', transform:'translateY(-50%)', color:c.textFaint, pointerEvents:'none' }} />
+            <input type={showPass?'text':'password'} placeholder="Password" value={password} onChange={e=>setPassword(e.target.value)} style={{ ...inp, paddingRight:'40px' }} onFocus={e=>e.target.style.borderColor=t.accent} onBlur={e=>e.target.style.borderColor=c.border} />
+            <button type="button" onClick={()=>setShowPass(!showPass)} style={{ position:'absolute', right:'12px', top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:c.textFaint, display:'flex', alignItems:'center' }}>
+              {showPass?<EyeOff size={15}/>:<Eye size={15}/>}
+            </button>
+          </div>
+
+          {mode==='register'&&(
+            <div style={{ marginBottom:'16px' }}>
+              <p style={{ fontSize:'11px', color:c.textMuted, fontWeight:700, textTransform:'uppercase', letterSpacing:'1px', marginBottom:'8px' }}>Account Type</p>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px' }}>
+                {Object.entries(ACCOUNT_LEVELS).map(([id,info])=>(
+                  <button key={id} type="button" onClick={()=>setLevel(id)} style={{ padding:'10px 12px', borderRadius:'10px', border:'none', background:level===id?`${info.color}20`:c.surfaceAlt, outline:`1.5px solid ${level===id?info.color:'transparent'}`, cursor:'pointer', transition:'all 0.2s', textAlign:'left' }}>
+                    <div style={{ fontSize:'18px', marginBottom:'2px' }}>{info.badge}</div>
+                    <div style={{ fontSize:'12px', fontWeight:700, color:level===id?info.color:c.text }}>{info.label}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {error&&<div style={{ padding:'10px 14px', borderRadius:'8px', marginBottom:'14px', background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.3)', fontSize:'13px', color:'#ef4444' }}>{error}</div>}
+
+          <button type="submit" disabled={loading} style={{ width:'100%', padding:'13px', borderRadius:'10px', border:'none', background:loading?c.border:t.gradient, color:'#fff', cursor:loading?'not-allowed':'pointer', fontSize:'14px', fontWeight:700, boxShadow:loading?'none':`0 4px 16px ${t.accentGlow}`, transition:'all 0.2s', display:'flex', alignItems:'center', justifyContent:'center', gap:'8px' }}>
+            {loading?'⏳ Please wait…':mode==='signin'?'🔑 Sign In':'🚀 Create Account'}
+          </button>
+
+          <p style={{ fontSize:'11px', color:c.textFaint, textAlign:'center', marginTop:'14px' }}>
+            {mode==='signin'?'Demo mode — any email and password works':'No credit card required · Free to join'}
+          </p>
+        </form>
       </div>
     </div>
   )
