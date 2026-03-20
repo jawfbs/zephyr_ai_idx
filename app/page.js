@@ -19,9 +19,11 @@ import MapPanel                                                from './MapPanel'
 import { isProfessional, getLevelLabel, getLevelColor, getLevelBadge } from './auth'
 
 export default function ZephyrPage() {
+  // ── Default theme: Ocean (nature → index 1) ──
   const [colorMode,      setColorMode]      = useState('mellow')
-  const [activeTheme,    setActiveTheme]    = useState(THEMES.realestate.variants[2])
-  const [themeCategory,  setThemeCategory]  = useState('realestate')
+  const [activeTheme,    setActiveTheme]    = useState(THEMES.nature.variants[1])
+  const [themeCategory,  setThemeCategory]  = useState('nature')
+
   const [user,           setUser]           = useState(null)
   const [signInOpen,     setSignInOpen]     = useState(false)
   const [accordionOpen,  setAccordionOpen]  = useState(false)
@@ -234,6 +236,8 @@ export default function ZephyrPage() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+
+          {/* Color mode */}
           <button onClick={cycleMode} title={modeLabel}
             style={{ width: '38px', height: '38px', borderRadius: '10px', border: `1px solid ${c.border}`, background: c.surfaceAlt, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: t.accent, transition: 'all 0.2s' }}
             onMouseEnter={e => { e.currentTarget.style.background = `${t.accent}20`; e.currentTarget.style.borderColor = t.accent }}
@@ -298,7 +302,6 @@ export default function ZephyrPage() {
 
                 {user ? (
                   <>
-                    {/* Logged-in user card */}
                     <div style={{ padding: '12px', borderRadius: '10px', background: c.surfaceAlt, marginBottom: '8px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                         <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: t.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 0 12px ${t.accentGlow}` }}>
@@ -332,7 +335,6 @@ export default function ZephyrPage() {
                       )}
                     </div>
 
-                    {/* Settings sections — only when logged in */}
                     {accordionSections.map(section => (
                       <AccordionSection
                         key={section.label}
@@ -351,7 +353,6 @@ export default function ZephyrPage() {
                     ))}
                   </>
                 ) : (
-                  /* Logged-out — only show sign in */
                   <div style={{ padding: '16px' }}>
                     <div style={{ textAlign: 'center', marginBottom: '16px' }}>
                       <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: t.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px', boxShadow: `0 0 20px ${t.accentGlow}` }}>
@@ -396,7 +397,6 @@ export default function ZephyrPage() {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
 
-          {/* Price */}
           <div style={{ position: 'relative' }}>
             <button style={pill(filterPriceMin || filterPriceMax)} onClick={() => { closeAllFilters(); setPriceOpen(!priceOpen) }}>
               <DollarSign size={13} />
@@ -428,7 +428,6 @@ export default function ZephyrPage() {
             )}
           </div>
 
-          {/* Beds */}
           <div style={{ position: 'relative' }}>
             <button style={pill(filterBeds)} onClick={() => { closeAllFilters(); setBedsOpen(!bedsOpen) }}>
               <Bed size={13} />
@@ -450,7 +449,6 @@ export default function ZephyrPage() {
             )}
           </div>
 
-          {/* Home Type */}
           <div style={{ position: 'relative' }}>
             <button style={pill(filterType)} onClick={() => { closeAllFilters(); setTypeOpen(!typeOpen) }}>
               <Home size={13} />
@@ -472,7 +470,6 @@ export default function ZephyrPage() {
             )}
           </div>
 
-          {/* Sort */}
           <div style={{ position: 'relative' }}>
             <button style={pill(false)} onClick={() => { closeAllFilters(); setSortOpen(!sortOpen) }}>
               <TrendingUp size={13} />
@@ -525,143 +522,132 @@ export default function ZephyrPage() {
       {/* ── MAIN CONTENT ── */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
 
-        {/* Listings panel */}
-        {(viewMode === 'grid' || viewMode === 'list' || viewMode === 'split') && (
-          <div style={{ width: viewMode === 'split' ? '50%' : '100%', overflowY: 'auto', padding: '20px', backgroundColor: c.bg, transition: 'width 0.3s', display: viewMode === 'split' ? 'block' : 'block' }}>
-            {!loading && (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
-                <div>
-                  <h1 style={{ fontSize: '20px', fontWeight: 800, color: c.text, margin: 0 }}>
-                    {displayed.length} Homes For Sale
-                    {apiCreds && <span style={{ marginLeft: '10px', fontSize: '12px', color: '#22c55e', fontWeight: 600 }}>● Live Data</span>}
-                  </h1>
-                  <p style={{ fontSize: '12px', color: c.textMuted, marginTop: '3px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <Sparkles size={11} style={{ color: t.accent }} />
-                    Powered by ZephyrAI IDX · SparkAPI (FBS)
-                  </p>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 10px 5px 6px', borderRadius: '20px', background: c.surfaceAlt, border: `1px solid ${c.border}`, fontSize: '12px', color: c.textMuted }}>
-                  <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: t.gradient, boxShadow: `0 0 8px ${t.accentGlow}` }} />
-                  {t.name} Theme
-                </div>
-              </div>
-            )}
+        <div style={{ width: viewMode === 'split' ? '50%' : '100%', overflowY: 'auto', padding: '20px', backgroundColor: c.bg, transition: 'width 0.3s' }}>
 
-            {loading ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} style={{ background: c.cardBg, borderRadius: '14px', overflow: 'hidden', border: `1px solid ${c.border}`, animation: 'pulse 1.5s infinite' }}>
-                    <div style={{ height: '185px', background: c.surfaceAlt }} />
-                    <div style={{ padding: '14px' }}>
-                      <div style={{ height: '14px', background: c.surfaceAlt, borderRadius: '4px', marginBottom: '8px', width: '60%' }} />
-                      <div style={{ height: '12px', background: c.surfaceAlt, borderRadius: '4px', width: '80%' }} />
-                    </div>
+          {/* Results header — NO theme badge */}
+          {!loading && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
+              <div>
+                <h1 style={{ fontSize: '20px', fontWeight: 800, color: c.text, margin: 0 }}>
+                  {displayed.length} Homes For Sale
+                  {apiCreds && (
+                    <span style={{ marginLeft: '10px', fontSize: '12px', color: '#22c55e', fontWeight: 600 }}>
+                      ● Live Data
+                    </span>
+                  )}
+                </h1>
+                <p style={{ fontSize: '12px', color: c.textMuted, marginTop: '3px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <Sparkles size={11} style={{ color: t.accent }} />
+                  Powered by ZephyrAI IDX · SparkAPI (FBS)
+                </p>
+              </div>
+              {/* ── theme badge REMOVED ── */}
+            </div>
+          )}
+
+          {loading ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} style={{ background: c.cardBg, borderRadius: '14px', overflow: 'hidden', border: `1px solid ${c.border}`, animation: 'pulse 1.5s infinite' }}>
+                  <div style={{ height: '185px', background: c.surfaceAlt }} />
+                  <div style={{ padding: '14px' }}>
+                    <div style={{ height: '14px', background: c.surfaceAlt, borderRadius: '4px', marginBottom: '8px', width: '60%' }} />
+                    <div style={{ height: '12px', background: c.surfaceAlt, borderRadius: '4px', width: '80%' }} />
                   </div>
-                ))}
-              </div>
-            ) : displayed.length === 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '300px', color: c.textMuted }}>
-                <AlertCircle size={48} style={{ color: c.textFaint, marginBottom: '16px' }} />
-                <p style={{ fontSize: '16px', fontWeight: 600, color: c.text }}>No listings found</p>
-                <p style={{ fontSize: '13px', marginTop: '4px' }}>Try adjusting your search or filters</p>
-              </div>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: viewMode === 'list' ? '1fr' : 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
-                {displayed.map(listing => {
-                  const isHovered = hoveredCard === listing.id
-                  const isSaved   = saved.includes(listing.id)
-                  const isNew     = listing.daysOnMarket <= 2
-                  return (
-                    <div key={listing.id}
-                      onClick={() => setSelectedListing(listing)}
-                      onMouseEnter={() => setHoveredCard(listing.id)}
-                      onMouseLeave={() => setHoveredCard(null)}
-                      style={{ background: c.cardBg, borderRadius: '16px', overflow: 'hidden', border: `1px solid ${isHovered ? t.accent + '60' : c.border}`, cursor: 'pointer', transition: 'all 0.25s', boxShadow: isHovered ? `${t.cardGlow}, 0 8px 32px rgba(0,0,0,0.15)` : '0 1px 4px rgba(0,0,0,0.06)', transform: isHovered ? 'translateY(-3px)' : 'none', display: viewMode === 'list' ? 'flex' : 'block' }}>
+                </div>
+              ))}
+            </div>
+          ) : displayed.length === 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '300px' }}>
+              <AlertCircle size={48} style={{ color: c.textFaint, marginBottom: '16px' }} />
+              <p style={{ fontSize: '16px', fontWeight: 600, color: c.text }}>No listings found</p>
+              <p style={{ fontSize: '13px', color: c.textMuted, marginTop: '4px' }}>Try adjusting your search or filters</p>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: viewMode === 'list' ? '1fr' : 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
+              {displayed.map(listing => {
+                const isHovered = hoveredCard === listing.id
+                const isSaved   = saved.includes(listing.id)
+                const isNew     = listing.daysOnMarket <= 2
+                return (
+                  <div key={listing.id}
+                    onClick={() => setSelectedListing(listing)}
+                    onMouseEnter={() => setHoveredCard(listing.id)}
+                    onMouseLeave={() => setHoveredCard(null)}
+                    style={{ background: c.cardBg, borderRadius: '16px', overflow: 'hidden', border: `1px solid ${isHovered ? t.accent + '60' : c.border}`, cursor: 'pointer', transition: 'all 0.25s', boxShadow: isHovered ? `${t.cardGlow}, 0 8px 32px rgba(0,0,0,0.15)` : '0 1px 4px rgba(0,0,0,0.06)', transform: isHovered ? 'translateY(-3px)' : 'none', display: viewMode === 'list' ? 'flex' : 'block' }}>
 
-                      {/* Image */}
-                      <div style={{ position: 'relative', height: viewMode === 'list' ? '160px' : '190px', width: viewMode === 'list' ? '200px' : '100%', flexShrink: 0, overflow: 'hidden', background: c.surfaceAlt }}>
-                        <img src={listing.photo} alt={listing.address} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s', transform: isHovered ? 'scale(1.05)' : 'scale(1)', display: 'block' }} />
-                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 55%)' }} />
+                    <div style={{ position: 'relative', height: viewMode === 'list' ? '160px' : '190px', width: viewMode === 'list' ? '200px' : '100%', flexShrink: 0, overflow: 'hidden', background: c.surfaceAlt }}>
+                      <img src={listing.photo} alt={listing.address} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s', transform: isHovered ? 'scale(1.05)' : 'scale(1)', display: 'block' }} />
+                      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 55%)' }} />
 
-                        {/* Status + New */}
-                        <div style={{ position: 'absolute', top: '10px', left: '10px', display: 'flex', gap: '5px' }}>
-                          <span style={{ background: statusBg(listing.status), color: '#fff', fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '20px' }}>{listing.status}</span>
-                          {isNew && <span style={{ background: t.accent, color: '#fff', fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '20px', boxShadow: `0 0 8px ${t.accentGlow}` }}>✦ NEW</span>}
-                        </div>
+                      <div style={{ position: 'absolute', top: '10px', left: '10px', display: 'flex', gap: '5px' }}>
+                        <span style={{ background: statusBg(listing.status), color: '#fff', fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '20px' }}>{listing.status}</span>
+                        {isNew && <span style={{ background: t.accent, color: '#fff', fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '20px', boxShadow: `0 0 8px ${t.accentGlow}` }}>✦ NEW</span>}
+                      </div>
 
-                        {/* Action buttons top-right */}
+                      {/* Save / Share / Hide — only visible when logged in */}
+                      {user && (
                         <div style={{ position: 'absolute', top: '10px', right: '10px', display: 'flex', gap: '5px' }}>
-                          {/* Save */}
-                          <button onClick={e => { e.stopPropagation(); if (user) toggleSaved(listing.id) }}
-                            title={user ? (isSaved ? 'Unsave' : 'Save') : 'Sign in to save'}
-                            style={{ width: '28px', height: '28px', borderRadius: '50%', background: isSaved ? t.accent : 'rgba(0,0,0,0.5)', border: 'none', cursor: user ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', opacity: user ? 1 : 0.6 }}>
+                          <button onClick={e => { e.stopPropagation(); toggleSaved(listing.id) }}
+                            style={{ width: '28px', height: '28px', borderRadius: '50%', background: isSaved ? t.accent : 'rgba(0,0,0,0.5)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
                             <Heart size={13} style={{ fill: isSaved ? '#fff' : 'none', color: '#fff' }} />
                           </button>
-
-                          {/* Share */}
-                          <button onClick={e => { e.stopPropagation(); if (user) setSelectedListing(listing) }}
-                            title={user ? 'Share' : 'Sign in to share'}
-                            style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(0,0,0,0.5)', border: 'none', cursor: user ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', opacity: user ? 1 : 0.6 }}>
+                          <button onClick={e => { e.stopPropagation(); setSelectedListing(listing) }}
+                            style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(0,0,0,0.5)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <Share2 size={13} color="#fff" />
                           </button>
-
-                          {/* Hide */}
-                          <button onClick={e => { e.stopPropagation(); if (user) handleHide(listing.id) }}
-                            title={user ? 'Hide listing' : 'Sign in to hide'}
-                            style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(0,0,0,0.5)', border: 'none', cursor: user ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', opacity: user ? 1 : 0.6 }}
-                            onMouseEnter={e => { if (user) e.currentTarget.style.background = 'rgba(239,68,68,0.7)' }}
+                          <button onClick={e => { e.stopPropagation(); handleHide(listing.id) }}
+                            style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(0,0,0,0.5)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.7)'}
                             onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,0,0,0.5)'}>
                             <EyeOff size={13} color="#fff" />
                           </button>
                         </div>
+                      )}
 
-                        {/* Price */}
-                        <div style={{ position: 'absolute', bottom: '10px', left: '12px' }}>
-                          <span style={{ color: '#fff', fontWeight: 900, fontSize: '20px', textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>{formatPrice(listing.price)}</span>
-                        </div>
-                      </div>
-
-                      {/* Card body */}
-                      <div style={{ padding: '12px', flex: 1 }}>
-                        <div style={{ display: 'flex', gap: '12px', marginBottom: '8px' }}>
-                          {[{ icon: Bed, val: listing.beds, unit: 'bd' }, { icon: Bath, val: listing.baths, unit: 'ba' }, { icon: Maximize2, val: listing.sqft?.toLocaleString(), unit: 'ft²' }].map(({ icon: Icon, val, unit }) => (
-                            <div key={unit} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <Icon size={12} style={{ color: t.accent }} />
-                              <span style={{ fontSize: '12px', fontWeight: 700, color: c.text }}>{val}</span>
-                              <span style={{ fontSize: '10px', color: c.textFaint }}>{unit}</span>
-                            </div>
-                          ))}
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', marginBottom: '8px' }}>
-                          <MapPin size={12} style={{ color: t.accent, marginTop: '2px', flexShrink: 0 }} />
-                          <div>
-                            <p style={{ fontSize: '12px', fontWeight: 700, color: c.text, margin: 0, lineHeight: 1.3 }}>{listing.address}</p>
-                            <p style={{ fontSize: '11px', color: c.textMuted, margin: '1px 0 0 0' }}>{listing.city}, {listing.state} {listing.zip}</p>
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '8px', borderTop: `1px solid ${c.border}` }}>
-                          <span style={{ padding: '2px 7px', borderRadius: '5px', background: `${t.accent}15`, color: t.accent, fontSize: '10px', fontWeight: 600, border: `1px solid ${t.accent}30` }}>{listing.type}</span>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '10px', color: c.textFaint }}>
-                            <Clock size={10} />
-                            {listing.daysOnMarket === 0 ? 'Just listed' : `${listing.daysOnMarket}d`}
-                          </span>
-                        </div>
+                      <div style={{ position: 'absolute', bottom: '10px', left: '12px' }}>
+                        <span style={{ color: '#fff', fontWeight: 900, fontSize: '20px', textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>{formatPrice(listing.price)}</span>
                       </div>
                     </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-        )}
 
-        {/* Map panel */}
+                    <div style={{ padding: '12px', flex: 1 }}>
+                      <div style={{ display: 'flex', gap: '12px', marginBottom: '8px' }}>
+                        {[{ icon: Bed, val: listing.beds, unit: 'bd' }, { icon: Bath, val: listing.baths, unit: 'ba' }, { icon: Maximize2, val: listing.sqft?.toLocaleString(), unit: 'ft²' }].map(({ icon: Icon, val, unit }) => (
+                          <div key={unit} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <Icon size={12} style={{ color: t.accent }} />
+                            <span style={{ fontSize: '12px', fontWeight: 700, color: c.text }}>{val}</span>
+                            <span style={{ fontSize: '10px', color: c.textFaint }}>{unit}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', marginBottom: '8px' }}>
+                        <MapPin size={12} style={{ color: t.accent, marginTop: '2px', flexShrink: 0 }} />
+                        <div>
+                          <p style={{ fontSize: '12px', fontWeight: 700, color: c.text, margin: 0 }}>{listing.address}</p>
+                          <p style={{ fontSize: '11px', color: c.textMuted, margin: '1px 0 0 0' }}>{listing.city}, {listing.state} {listing.zip}</p>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '8px', borderTop: `1px solid ${c.border}` }}>
+                        <span style={{ padding: '2px 7px', borderRadius: '5px', background: `${t.accent}15`, color: t.accent, fontSize: '10px', fontWeight: 600, border: `1px solid ${t.accent}30` }}>{listing.type}</span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '10px', color: c.textFaint }}>
+                          <Clock size={10} />
+                          {listing.daysOnMarket === 0 ? 'Just listed' : `${listing.daysOnMarket}d`}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Map */}
         {viewMode === 'split' && (
           <div style={{ flex: 1, position: 'relative', overflow: 'hidden', borderLeft: `1px solid ${c.border}` }}>
             <MapPanel
               listings={displayed}
-              t={t}
-              c={c}
+              t={t} c={c}
               colorMode={colorMode}
               onSelectListing={setSelectedListing}
             />
