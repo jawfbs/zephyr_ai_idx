@@ -13,7 +13,8 @@
     "react-dom": "^18.3.1",
     "axios": "latest",
     "lucide-react": "latest",
-    "spark-md5": "latest"
+    "spark-md5": "latest",
+    "leaflet": "^1.9.4"
   },
   "devDependencies": {
     "autoprefixer": "latest",
