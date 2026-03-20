@@ -262,21 +262,27 @@ export default function ZephyrPage() {
                   </div>
                 </div>
                 {[
-                  { label: '🏠 My Listings', items: ['Saved Homes', 'Recent Searches', 'Home Alerts', 'Visited Homes'] },
-                  { label: '⚙️ Settings', items: ['Account Settings', 'Notifications', 'Privacy', 'Appearance'] },
-                  { label: '🎨 Theme', isTheme: true },
-                ].map(section => (
-                  <AccordionSection
-                    key={section.label}
-                    section={section}
-                    c={c} t={t}
-                    themeCategory={themeCategory}
-                    setThemeCategory={setThemeCategory}
-                    activeTheme={activeTheme}
-                    setActiveTheme={setActiveTheme}
-                    THEMES={THEMES}
-                  />
-                ))}
+
+
+
+
+
+{ label: '🏠 My Listings', items: ['Saved Homes', 'Recent Searches', 'Home Alerts', 'Visited Homes'] },
+  { label: '⚙️ Settings', items: ['Account Settings', 'Notifications', 'Privacy', 'Appearance'] },
+  { label: '🎨 Theme', isTheme: true },
+].map(section => (
+  <AccordionSection
+    key={section.label}
+    section={section}
+    c={c} t={t}
+    themeCategory={themeCategory}
+    setThemeCategory={setThemeCategory}
+    activeTheme={activeTheme}
+    setActiveTheme={setActiveTheme}
+    THEMES={THEMES}
+  />
+))}
+
                 <div style={{ borderTop: `1px solid ${c.border}`, marginTop: '8px', paddingTop: '8px' }}>
                   <button style={{ width: '100%', padding: '10px', borderRadius: '8px', border: 'none', background: `${t.accent}15`, color: t.accent, cursor: 'pointer', fontSize: '13px', fontWeight: 700 }}>
                     Sign In / Register
