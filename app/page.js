@@ -1,45 +1,60 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   Search, Heart, Bed, Bath, MapPin, SlidersHorizontal,
   List, Map, ChevronDown, X, Clock, MessageSquare,
   Moon, Sunset, Sun, Home, Check, Sparkles,
   TrendingUp, ArrowUpRight, LayoutGrid, Maximize2,
-  DollarSign, AlertCircle, User, Phone, Mail
+  DollarSign, AlertCircle, User, Phone, Mail, LogOut
 } from 'lucide-react'
-import { THEMES } from './themes'
-import { DEMO_LISTINGS, formatPrice } from './data'
-import AccordionSection from './AccordionSection'
-import AccountPage from './AccountPage'
+import { THEMES }                        from './themes'
+import { DEMO_LISTINGS, formatPrice }    from './data'
+import AccordionSection                  from './AccordionSection'
+import AccountPage                       from './AccountPage'
+import SignInModal                       from './SignInModal'
+import { isProfessional, getLevelLabel, getLevelColor, getLevelBadge } from './auth'
 
 export default function ZephyrPage() {
-  const [colorMode, setColorMode]       = useState('dark')
-  const [activeTheme, setActiveTheme]   = useState(THEMES.realestate.variants[2])
+  // ── color / theme ──────────────────────────
+  const [colorMode,     setColorMode]     = useState('dark')
+  const [activeTheme,   setActiveTheme]   = useState(THEMES.realestate.variants[2])
   const [themeCategory, setThemeCategory] = useState('realestate')
+
+  // ── auth ───────────────────────────────────
+  const [user,          setUser]          = useState(null)
+  const [signInOpen,    setSignInOpen]    = useState(false)
+
+  // ── panels ────────────────────────────────
   const [accordionOpen, setAccordionOpen] = useState(false)
-  const [contactOpen, setContactOpen]   = useState(false)
-  const [accountOpen, setAccountOpen]   = useState(false)
-  const [query, setQuery]               = useState('')
-  const [saved, setSaved]               = useState([])
-  const [viewMode, setViewMode]         = useState('grid')
-  const [listings, setListings]         = useState(DEMO_LISTINGS)
-  const [loading, setLoading]           = useState(false)
-  const [activeNav, setActiveNav]       = useState('Buy')
-  const [priceOpen, setPriceOpen]       = useState(false)
-  const [bedsOpen, setBedsOpen]         = useState(false)
-  const [typeOpen, setTypeOpen]         = useState(false)
-  const [sortOpen, setSortOpen]         = useState(false)
-  const [filterBeds, setFilterBeds]     = useState('')
-  const [filterPriceMin, setFilterPriceMin] = useState('')
-  const [filterPriceMax, setFilterPriceMax] = useState('')
-  const [filterType, setFilterType]     = useState('')
-  const [sortBy, setSortBy]             = useState('price_desc')
-  const [hoveredCard, setHoveredCard]   = useState(null)
+  const [contactOpen,   setContactOpen]   = useState(false)
+  const [accountOpen,   setAccountOpen]   = useState(false)
+
+  // ── api creds ─────────────────────────────
+  const [apiCreds,      setApiCreds]      = useState(null)
+
+  // ── search / filter ───────────────────────
+  const [query,          setQuery]         = useState('')
+  const [saved,          setSaved]         = useState([])
+  const [viewMode,       setViewMode]      = useState('grid')
+  const [listings,       setListings]      = useState(DEMO_LISTINGS)
+  const [loading,        setLoading]       = useState(false)
+  const [activeNav,      setActiveNav]     = useState('Buy')
+  const [priceOpen,      setPriceOpen]     = useState(false)
+  const [bedsOpen,       setBedsOpen]      = useState(false)
+  const [typeOpen,       setTypeOpen]      = useState(false)
+  const [sortOpen,       setSortOpen]      = useState(false)
+  const [filterBeds,     setFilterBeds]    = useState('')
+  const [filterPriceMin, setFilterPriceMin]= useState('')
+  const [filterPriceMax, setFilterPriceMax]= useState('')
+  const [filterType,     setFilterType]    = useState('')
+  const [sortBy,         setSortBy]        = useState('price_desc')
+  const [hoveredCard,    setHoveredCard]   = useState(null)
 
   const accordionRef = useRef(null)
   const contactRef   = useRef(null)
 
+  // ── color map ─────────────────────────────
   const cm = {
     light: {
       bg: '#f8fafc', surface: '#ffffff', surfaceAlt: '#f1f5f9',
@@ -63,25 +78,58 @@ export default function ZephyrPage() {
       searchShadow: '0 4px 32px rgba(0,0,0,0.5)',
     },
   }
-
   const c = cm[colorMode]
   const t = activeTheme
 
+  const ModeIcon = colorMode === 'light' ? Sun : colorMode === 'mellow' ? Sunset : Moon
+  const modeLabel = colorMode === 'light' ? 'Light' : colorMode === 'mellow' ? 'Mellow' : 'Dark'
   const cycleMode = () =>
     setColorMode(prev => prev === 'light' ? 'mellow' : prev === 'mellow' ? 'dark' : 'light')
 
-  const ModeIcon = colorMode === 'light' ? Sun : colorMode === 'mellow' ? Sunset : Moon
-  const modeLabel = colorMode === 'light' ? 'Light' : colorMode === 'mellow' ? 'Mellow' : 'Dark'
-
+  // ── close panels on outside click ─────────
   useEffect(() => {
-    const handler = (e) => {
+    const h = (e) => {
       if (accordionRef.current && !accordionRef.current.contains(e.target)) setAccordionOpen(false)
-      if (contactRef.current && !contactRef.current.contains(e.target)) setContactOpen(false)
+      if (contactRef.current   && !contactRef.current.contains(e.target))   setContactOpen(false)
     }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
+    document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
   }, [])
 
+  // ── when API creds saved → reload listings ─
+  const handleSaveApiCreds = useCallback((creds) => {
+    setApiCreds(creds)
+    setAccordionOpen(false)
+    setLoading(true)
+    // Attempt real SparkAPI call via our route
+    fetch(`/api/listings?query=${encodeURIComponent(query)}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.listings && data.listings.length > 0) {
+          setListings(data.listings)
+        } else {
+          setListings(DEMO_LISTINGS)
+        }
+        setLoading(false)
+      })
+      .catch(() => {
+        setListings(DEMO_LISTINGS)
+        setLoading(false)
+      })
+  }, [query])
+
+  // ── sign in handler ────────────────────────
+  const handleSignIn = (userData) => {
+    setUser(userData)
+  }
+
+  const handleSignOut = () => {
+    setUser(null)
+    setApiCreds(null)
+    setAccordionOpen(false)
+  }
+
+  // ── search ────────────────────────────────
   const closeAllFilters = () => {
     setPriceOpen(false); setBedsOpen(false); setTypeOpen(false); setSortOpen(false)
   }
@@ -127,9 +175,9 @@ export default function ZephyrPage() {
       return 0
     })
 
-  const navItems     = ['Buy', 'Rent', 'Sell', 'Agents', 'Mortgage']
+  const navItems      = ['Buy', 'Rent', 'Sell', 'Agents', 'Mortgage']
   const propertyTypes = ['Single Family', 'Condo', 'Townhouse', 'Multi-Family', 'Land']
-  const sortOptions  = [
+  const sortOptions   = [
     { value: 'price_desc', label: 'Price: High to Low' },
     { value: 'price_asc',  label: 'Price: Low to High' },
     { value: 'newest',     label: 'Newest Listed' },
@@ -156,21 +204,22 @@ export default function ZephyrPage() {
     'Coming Soon': t.accent, 'Active Under Contract': '#ca8a04',
   }[s] || '#6b7280')
 
+  // Build accordion sections based on user level
+  const isPro = user && isProfessional(user.level)
   const accordionSections = [
     { label: '👤 Account',       isAccount: true },
     { label: '🔔 Notifications', isNotifications: true },
     { label: '🎨 Appearance',    isAppearance: true },
-    { label: '🔌 Integrations',  isIntegrations: true },
+    ...(isPro ? [{ label: '🔌 Integrations', isIntegrations: true }] : []),
     { label: '🔒 Privacy',       isPrivacy: true },
   ]
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', fontFamily: '"Inter", system-ui, sans-serif', backgroundColor: c.bg, color: c.text, transition: 'background 0.3s, color 0.3s' }}>
 
-      {/* Account Modal */}
-      {accountOpen && (
-        <AccountPage c={c} t={t} onClose={() => setAccountOpen(false)} />
-      )}
+      {/* ── MODALS ── */}
+      {accountOpen && <AccountPage c={c} t={t} onClose={() => setAccountOpen(false)} />}
+      {signInOpen  && <SignInModal  c={c} t={t} onClose={() => setSignInOpen(false)} onSignIn={handleSignIn} />}
 
       {/* ── HEADER ── */}
       <header style={{ backgroundColor: c.headerBg, borderBottom: `1px solid ${c.border}`, padding: '0 20px', height: '58px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, zIndex: 100 }}>
@@ -196,7 +245,7 @@ export default function ZephyrPage() {
           </nav>
         </div>
 
-        {/* Right controls */}
+        {/* Right */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
           {/* Color mode */}
@@ -225,9 +274,9 @@ export default function ZephyrPage() {
                   </div>
                 </div>
                 {[
-                  { icon: Phone, label: 'Call Us',    sub: '+1 (800) 555-0199',    color: '#16a34a' },
-                  { icon: Mail,  label: 'Email Us',   sub: 'hello@zephyrai.idx',   color: t.accent },
-                  { icon: MessageSquare, label: 'Live Chat', sub: 'Start a conversation', color: '#7c3aed' },
+                  { icon: Phone,        label: 'Call Us',   sub: '+1 (800) 555-0199',    color: '#16a34a' },
+                  { icon: Mail,         label: 'Email Us',  sub: 'hello@zephyrai.idx',   color: t.accent },
+                  { icon: MessageSquare,label: 'Live Chat', sub: 'Start a conversation', color: '#7c3aed' },
                 ].map(({ icon: Icon, label, sub, color }) => (
                   <button key={label}
                     style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '10px', borderRadius: '10px', border: 'none', background: 'transparent', cursor: 'pointer', marginBottom: '4px', transition: 'background 0.15s' }}
@@ -247,7 +296,7 @@ export default function ZephyrPage() {
             )}
           </div>
 
-          {/* Accordion menu */}
+          {/* Accordion */}
           <div style={{ position: 'relative' }} ref={accordionRef}>
             <button onClick={() => { setAccordionOpen(!accordionOpen); setContactOpen(false) }}
               style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '7px 14px', borderRadius: '10px', border: `1px solid ${accordionOpen ? t.accent : c.border}`, background: accordionOpen ? `${t.accent}15` : c.surfaceAlt, cursor: 'pointer', transition: 'all 0.2s', color: accordionOpen ? t.accent : c.text, fontSize: '13px', fontWeight: 600 }}>
@@ -260,26 +309,61 @@ export default function ZephyrPage() {
             </button>
 
             {accordionOpen && (
-              <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', backgroundColor: c.surface, border: `1px solid ${c.border}`, borderRadius: '14px', boxShadow: '0 16px 48px rgba(0,0,0,0.3)', padding: '8px', zIndex: 200, width: '300px' }}>
+              <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', backgroundColor: c.surface, border: `1px solid ${c.border}`, borderRadius: '14px', boxShadow: '0 16px 48px rgba(0,0,0,0.3)', padding: '8px', zIndex: 200, width: '300px', maxHeight: '80vh', overflowY: 'auto' }}>
 
                 {/* User card */}
-                <div style={{ padding: '12px', borderRadius: '10px', background: c.surfaceAlt, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: t.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 0 12px ${t.accentGlow}` }}>
-                    <User size={18} color="#fff" />
+                {user ? (
+                  <div style={{ padding: '12px', borderRadius: '10px', background: c.surfaceAlt, marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: t.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 0 12px ${t.accentGlow}` }}>
+                        <span style={{ fontSize: '18px' }}>{getLevelBadge(user.level)}</span>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontWeight: 700, fontSize: '13px', color: c.text, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {user.firstName} {user.lastName}
+                        </p>
+                        <p style={{ fontSize: '11px', color: c.textMuted, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</p>
+                      </div>
+                    </div>
+                    {/* Level badge */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: `${getLevelColor(user.level)}20`, color: getLevelColor(user.level), border: `1px solid ${getLevelColor(user.level)}40` }}>
+                        {getLevelBadge(user.level)} {getLevelLabel(user.level)}
+                      </span>
+                      <button onClick={handleSignOut}
+                        style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 10px', borderRadius: '6px', border: `1px solid ${c.border}`, background: 'transparent', cursor: 'pointer', fontSize: '11px', color: c.textMuted, fontWeight: 600 }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = '#ef4444'; e.currentTarget.style.color = '#ef4444' }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = c.border; e.currentTarget.style.color = c.textMuted }}>
+                        <LogOut size={11} /> Sign Out
+                      </button>
+                    </div>
+                    {/* API connection indicator */}
+                    {apiCreds && (
+                      <div style={{ marginTop: '8px', padding: '6px 10px', borderRadius: '6px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22c55e', animation: 'pulse 2s infinite' }} />
+                        <span style={{ fontSize: '11px', color: '#22c55e', fontWeight: 600 }}>
+                          SparkAPI {apiCreds.mode === 'live' ? 'Live' : 'Replication'} Connected
+                        </span>
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <p style={{ fontWeight: 700, fontSize: '14px', color: c.text, margin: 0 }}>Welcome Back</p>
-                    <p style={{ fontSize: '12px', color: c.textMuted, margin: 0 }}>Sign in to save homes</p>
+                ) : (
+                  <div style={{ padding: '12px', borderRadius: '10px', background: c.surfaceAlt, marginBottom: '8px' }}>
+                    <p style={{ fontWeight: 700, fontSize: '13px', color: c.text, margin: '0 0 4px' }}>Welcome to ZephyrAI IDX</p>
+                    <p style={{ fontSize: '11px', color: c.textMuted, margin: '0 0 10px' }}>Sign in to access all features</p>
+                    <button onClick={() => { setSignInOpen(true); setAccordionOpen(false) }}
+                      style={{ width: '100%', padding: '9px', borderRadius: '8px', border: 'none', background: t.gradient, color: '#fff', cursor: 'pointer', fontSize: '13px', fontWeight: 700, boxShadow: `0 4px 12px ${t.accentGlow}` }}>
+                      Sign In / Register
+                    </button>
                   </div>
-                </div>
+                )}
 
                 {/* Sections */}
                 {accordionSections.map(section => (
                   <AccordionSection
                     key={section.label}
                     section={section}
-                    c={c}
-                    t={t}
+                    c={c} t={t}
                     colorMode={colorMode}
                     setColorMode={setColorMode}
                     themeCategory={themeCategory}
@@ -287,18 +371,10 @@ export default function ZephyrPage() {
                     activeTheme={activeTheme}
                     setActiveTheme={setActiveTheme}
                     THEMES={THEMES}
-                    onOpenAccount={() => {
-                      setAccountOpen(true)
-                      setAccordionOpen(false)
-                    }}
+                    onOpenAccount={() => { setAccountOpen(true); setAccordionOpen(false) }}
+                    onSaveApiCreds={handleSaveApiCreds}
                   />
                 ))}
-
-                <div style={{ borderTop: `1px solid ${c.border}`, marginTop: '8px', paddingTop: '8px' }}>
-                  <button style={{ width: '100%', padding: '10px', borderRadius: '8px', border: 'none', background: `${t.accent}15`, color: t.accent, cursor: 'pointer', fontSize: '13px', fontWeight: 700 }}>
-                    Sign In / Register
-                  </button>
-                </div>
               </div>
             )}
           </div>
@@ -322,7 +398,6 @@ export default function ZephyrPage() {
           </button>
         </form>
 
-        {/* Filters */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
 
           {/* Price */}
@@ -457,13 +532,13 @@ export default function ZephyrPage() {
       {/* ── MAIN CONTENT ── */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
 
-        {/* Listings */}
         <div style={{ width: viewMode === 'split' ? '58%' : '100%', overflowY: 'auto', padding: '20px', backgroundColor: c.bg, transition: 'width 0.3s' }}>
           {!loading && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
               <div>
                 <h1 style={{ fontSize: '20px', fontWeight: 800, color: c.text, margin: 0 }}>
                   {displayed.length} Homes For Sale
+                  {apiCreds && <span style={{ marginLeft: '10px', fontSize: '12px', color: '#22c55e', fontWeight: 600 }}>● Live Data</span>}
                 </h1>
                 <p style={{ fontSize: '12px', color: c.textMuted, marginTop: '3px', display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <Sparkles size={11} style={{ color: t.accent }} />
@@ -524,8 +599,8 @@ export default function ZephyrPage() {
                     <div style={{ padding: '14px', flex: 1 }}>
                       <div style={{ display: 'flex', gap: '14px', marginBottom: '10px' }}>
                         {[
-                          { icon: Bed,       val: listing.beds,              unit: 'bd'  },
-                          { icon: Bath,      val: listing.baths,             unit: 'ba'  },
+                          { icon: Bed,       val: listing.beds,                  unit: 'bd'  },
+                          { icon: Bath,      val: listing.baths,                 unit: 'ba'  },
                           { icon: Maximize2, val: listing.sqft.toLocaleString(), unit: 'ft²' },
                         ].map(({ icon: Icon, val, unit }) => (
                           <div key={unit} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -612,8 +687,8 @@ export default function ZephyrPage() {
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: ${t.accent}50; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: ${t.accent}; }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-        @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+        @keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        @keyframes spin   { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
       `}</style>
     </div>
   )
