@@ -14,30 +14,31 @@ import AccordionSection from './AccordionSection'
 import AccountPage from './AccountPage'
 
 export default function ZephyrPage() {
-  const [colorMode, setColorMode] = useState('dark')
-  const [activeTheme, setActiveTheme] = useState(THEMES.realestate.variants[2])
+  const [colorMode, setColorMode]       = useState('dark')
+  const [activeTheme, setActiveTheme]   = useState(THEMES.realestate.variants[2])
   const [themeCategory, setThemeCategory] = useState('realestate')
   const [accordionOpen, setAccordionOpen] = useState(false)
-  const [contactOpen, setContactOpen] = useState(false)
-  const [query, setQuery] = useState('')
-  const [saved, setSaved] = useState([])
-  const [viewMode, setViewMode] = useState('grid')
-  const [listings, setListings] = useState(DEMO_LISTINGS)
-  const [loading, setLoading] = useState(false)
-  const [activeNav, setActiveNav] = useState('Buy')
-  const [priceOpen, setPriceOpen] = useState(false)
-  const [bedsOpen, setBedsOpen] = useState(false)
-  const [typeOpen, setTypeOpen] = useState(false)
-  const [sortOpen, setSortOpen] = useState(false)
-  const [filterBeds, setFilterBeds] = useState('')
+  const [contactOpen, setContactOpen]   = useState(false)
+  const [accountOpen, setAccountOpen]   = useState(false)
+  const [query, setQuery]               = useState('')
+  const [saved, setSaved]               = useState([])
+  const [viewMode, setViewMode]         = useState('grid')
+  const [listings, setListings]         = useState(DEMO_LISTINGS)
+  const [loading, setLoading]           = useState(false)
+  const [activeNav, setActiveNav]       = useState('Buy')
+  const [priceOpen, setPriceOpen]       = useState(false)
+  const [bedsOpen, setBedsOpen]         = useState(false)
+  const [typeOpen, setTypeOpen]         = useState(false)
+  const [sortOpen, setSortOpen]         = useState(false)
+  const [filterBeds, setFilterBeds]     = useState('')
   const [filterPriceMin, setFilterPriceMin] = useState('')
   const [filterPriceMax, setFilterPriceMax] = useState('')
-  const [filterType, setFilterType] = useState('')
-  const [sortBy, setSortBy] = useState('price_desc')
-  const [hoveredCard, setHoveredCard] = useState(null)
+  const [filterType, setFilterType]     = useState('')
+  const [sortBy, setSortBy]             = useState('price_desc')
+  const [hoveredCard, setHoveredCard]   = useState(null)
 
   const accordionRef = useRef(null)
-  const contactRef = useRef(null)
+  const contactRef   = useRef(null)
 
   const cm = {
     light: {
@@ -82,10 +83,7 @@ export default function ZephyrPage() {
   }, [])
 
   const closeAllFilters = () => {
-    setPriceOpen(false)
-    setBedsOpen(false)
-    setTypeOpen(false)
-    setSortOpen(false)
+    setPriceOpen(false); setBedsOpen(false); setTypeOpen(false); setSortOpen(false)
   }
 
   const handleSearch = (e) => {
@@ -129,13 +127,13 @@ export default function ZephyrPage() {
       return 0
     })
 
-  const navItems = ['Buy', 'Rent', 'Sell', 'Agents', 'Mortgage']
+  const navItems     = ['Buy', 'Rent', 'Sell', 'Agents', 'Mortgage']
   const propertyTypes = ['Single Family', 'Condo', 'Townhouse', 'Multi-Family', 'Land']
-  const sortOptions = [
+  const sortOptions  = [
     { value: 'price_desc', label: 'Price: High to Low' },
-    { value: 'price_asc', label: 'Price: Low to High' },
-    { value: 'newest', label: 'Newest Listed' },
-    { value: 'sqft', label: 'Largest First' },
+    { value: 'price_asc',  label: 'Price: Low to High' },
+    { value: 'newest',     label: 'Newest Listed' },
+    { value: 'sqft',       label: 'Largest First' },
   ]
 
   const pill = (active) => ({
@@ -154,14 +152,25 @@ export default function ZephyrPage() {
   }
 
   const statusBg = (s) => ({
-    'Active': '#16a34a',
-    'Pending': '#ea580c',
-    'Coming Soon': t.accent,
-    'Active Under Contract': '#ca8a04',
+    'Active': '#16a34a', 'Pending': '#ea580c',
+    'Coming Soon': t.accent, 'Active Under Contract': '#ca8a04',
   }[s] || '#6b7280')
+
+  const accordionSections = [
+    { label: '👤 Account',       isAccount: true },
+    { label: '🔔 Notifications', isNotifications: true },
+    { label: '🎨 Appearance',    isAppearance: true },
+    { label: '🔌 Integrations',  isIntegrations: true },
+    { label: '🔒 Privacy',       isPrivacy: true },
+  ]
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', fontFamily: '"Inter", system-ui, sans-serif', backgroundColor: c.bg, color: c.text, transition: 'background 0.3s, color 0.3s' }}>
+
+      {/* Account Modal */}
+      {accountOpen && (
+        <AccountPage c={c} t={t} onClose={() => setAccountOpen(false)} />
+      )}
 
       {/* ── HEADER ── */}
       <header style={{ backgroundColor: c.headerBg, borderBottom: `1px solid ${c.border}`, padding: '0 20px', height: '58px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, zIndex: 100 }}>
@@ -216,8 +225,8 @@ export default function ZephyrPage() {
                   </div>
                 </div>
                 {[
-                  { icon: Phone, label: 'Call Us', sub: '+1 (800) 555-0199', color: '#16a34a' },
-                  { icon: Mail, label: 'Email Us', sub: 'hello@zephyrai.idx', color: t.accent },
+                  { icon: Phone, label: 'Call Us',    sub: '+1 (800) 555-0199',    color: '#16a34a' },
+                  { icon: Mail,  label: 'Email Us',   sub: 'hello@zephyrai.idx',   color: t.accent },
                   { icon: MessageSquare, label: 'Live Chat', sub: 'Start a conversation', color: '#7c3aed' },
                 ].map(({ icon: Icon, label, sub, color }) => (
                   <button key={label}
@@ -238,7 +247,7 @@ export default function ZephyrPage() {
             )}
           </div>
 
-          {/* Accordion */}
+          {/* Accordion menu */}
           <div style={{ position: 'relative' }} ref={accordionRef}>
             <button onClick={() => { setAccordionOpen(!accordionOpen); setContactOpen(false) }}
               style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '7px 14px', borderRadius: '10px', border: `1px solid ${accordionOpen ? t.accent : c.border}`, background: accordionOpen ? `${t.accent}15` : c.surfaceAlt, cursor: 'pointer', transition: 'all 0.2s', color: accordionOpen ? t.accent : c.text, fontSize: '13px', fontWeight: 600 }}>
@@ -251,7 +260,9 @@ export default function ZephyrPage() {
             </button>
 
             {accordionOpen && (
-              <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', backgroundColor: c.surface, border: `1px solid ${c.border}`, borderRadius: '14px', boxShadow: '0 16px 48px rgba(0,0,0,0.3)', padding: '8px', zIndex: 200, width: '290px' }}>
+              <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', backgroundColor: c.surface, border: `1px solid ${c.border}`, borderRadius: '14px', boxShadow: '0 16px 48px rgba(0,0,0,0.3)', padding: '8px', zIndex: 200, width: '300px' }}>
+
+                {/* User card */}
                 <div style={{ padding: '12px', borderRadius: '10px', background: c.surfaceAlt, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: t.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 0 12px ${t.accentGlow}` }}>
                     <User size={18} color="#fff" />
@@ -261,27 +272,27 @@ export default function ZephyrPage() {
                     <p style={{ fontSize: '12px', color: c.textMuted, margin: 0 }}>Sign in to save homes</p>
                   </div>
                 </div>
-                {[
 
-
-
-
-
-{ label: '🏠 My Listings', items: ['Saved Homes', 'Recent Searches', 'Home Alerts', 'Visited Homes'] },
-  { label: '⚙️ Settings', items: ['Account Settings', 'Notifications', 'Privacy', 'Appearance'] },
-  { label: '🎨 Theme', isTheme: true },
-].map(section => (
-  <AccordionSection
-    key={section.label}
-    section={section}
-    c={c} t={t}
-    themeCategory={themeCategory}
-    setThemeCategory={setThemeCategory}
-    activeTheme={activeTheme}
-    setActiveTheme={setActiveTheme}
-    THEMES={THEMES}
-  />
-))}
+                {/* Sections */}
+                {accordionSections.map(section => (
+                  <AccordionSection
+                    key={section.label}
+                    section={section}
+                    c={c}
+                    t={t}
+                    colorMode={colorMode}
+                    setColorMode={setColorMode}
+                    themeCategory={themeCategory}
+                    setThemeCategory={setThemeCategory}
+                    activeTheme={activeTheme}
+                    setActiveTheme={setActiveTheme}
+                    THEMES={THEMES}
+                    onOpenAccount={() => {
+                      setAccountOpen(true)
+                      setAccordionOpen(false)
+                    }}
+                  />
+                ))}
 
                 <div style={{ borderTop: `1px solid ${c.border}`, marginTop: '8px', paddingTop: '8px' }}>
                   <button style={{ width: '100%', padding: '10px', borderRadius: '8px', border: 'none', background: `${t.accent}15`, color: t.accent, cursor: 'pointer', fontSize: '13px', fontWeight: 700 }}>
@@ -488,8 +499,8 @@ export default function ZephyrPage() {
             <div style={{ display: 'grid', gridTemplateColumns: viewMode === 'list' ? '1fr' : 'repeat(auto-fill, minmax(270px, 1fr))', gap: '16px' }}>
               {displayed.map(listing => {
                 const isHovered = hoveredCard === listing.id
-                const isSaved = saved.includes(listing.id)
-                const isNew = listing.daysOnMarket <= 2
+                const isSaved   = saved.includes(listing.id)
+                const isNew     = listing.daysOnMarket <= 2
                 return (
                   <div key={listing.id}
                     onMouseEnter={() => setHoveredCard(listing.id)}
@@ -512,7 +523,11 @@ export default function ZephyrPage() {
                     </div>
                     <div style={{ padding: '14px', flex: 1 }}>
                       <div style={{ display: 'flex', gap: '14px', marginBottom: '10px' }}>
-                        {[{ icon: Bed, val: listing.beds, unit: 'bd' }, { icon: Bath, val: listing.baths, unit: 'ba' }, { icon: Maximize2, val: listing.sqft.toLocaleString(), unit: 'ft²' }].map(({ icon: Icon, val, unit }) => (
+                        {[
+                          { icon: Bed,       val: listing.beds,              unit: 'bd'  },
+                          { icon: Bath,      val: listing.baths,             unit: 'ba'  },
+                          { icon: Maximize2, val: listing.sqft.toLocaleString(), unit: 'ft²' },
+                        ].map(({ icon: Icon, val, unit }) => (
                           <div key={unit} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                             <Icon size={13} style={{ color: t.accent }} />
                             <span style={{ fontSize: '13px', fontWeight: 700, color: c.text }}>{val}</span>
@@ -598,6 +613,7 @@ export default function ZephyrPage() {
         ::-webkit-scrollbar-thumb { background: ${t.accent}50; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: ${t.accent}; }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
       `}</style>
     </div>
   )
