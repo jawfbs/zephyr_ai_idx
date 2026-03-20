@@ -1,193 +1,281 @@
 'use client'
-
 import { useEffect, useRef, useState } from 'react'
-import { MapPin, ExternalLink } from 'lucide-react'
-import { formatPrice } from './data'
 
-export default function MapPanel({ listings, t, c, colorMode, onSelectListing }) {
-  const mapRef       = useRef(null)
-  const mapInstance  = useRef(null)
-  const markersRef   = useRef([])
-  const [ready, setReady] = useState(false)
+const LAYERS = [
+  {
+    id: 'osm',
+    label: '🗺️ Street',
+    url: 'https://{a-c}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '© OpenStreetMap contributors',
+  },
+  {
+    id: 'satellite',
+    label: '🛰️ Satellite',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attribution: '© Esri, Maxar, Earthstar Geographics',
+  },
+  {
+    id: 'topo',
+    label: '⛰️ Topo',
+    url: 'https://{a-c}.tile.opentopomap.org/{z}/{x}/{y}.png',
+    attribution: '© OpenTopoMap',
+  },
+  {
+    id: 'transit',
+    label: '🚌 Transit',
+    url: 'https://tile.memomaps.de/tilegen/{z}/{x}/{y}.png',
+    attribution: '© MemoMaps',
+  },
+  {
+    id: 'dark',
+    label: '🌑 Dark',
+    url: 'https://{a-c}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    attribution: '© CARTO',
+  },
+  {
+    id: 'light',
+    label: '☀️ Light',
+    url: 'https://{a-c}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    attribution: '© CARTO',
+  },
+  {
+    id: 'watercolor',
+    label: '🎨 Artistic',
+    url: 'https://stamen-tiles.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg',
+    attribution: '© Stamen Design',
+  },
+  {
+    id: 'cycle',
+    label: '🚴 Cycle',
+    url: 'https://{a-c}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png',
+    attribution: '© CyclOSM contributors',
+  },
+]
 
-  // Load Leaflet CSS once
+function buildUrl(url, z, x, y) {
+  return url
+    .replace('{z}', z).replace('{x}', x).replace('{y}', y)
+    .replace('{r}', window.devicePixelRatio > 1 ? '@2x' : '')
+    .replace(/\{a-c\}/g, () => ['a','b','c'][Math.floor(Math.random()*3)])
+}
+
+export default function MapPanel({ listings, t, c, colorMode, onSelectListing, onXP }) {
+  const mapRef    = useRef(null)
+  const olMapRef  = useRef(null)
+  const [activeLayer, setActiveLayer] = useState('osm')
+  const [showLayers,  setShowLayers]  = useState(false)
+  const [olLoaded,    setOlLoaded]    = useState(false)
+  const [popupInfo,   setPopupInfo]   = useState(null)
+  const sourceRef = useRef(null)
+  const vectorRef = useRef(null)
+
+  // Dynamic import of OpenLayers
   useEffect(() => {
-    if (document.getElementById('leaflet-css')) { setReady(true); return }
-    const link = document.createElement('link')
-    link.id    = 'leaflet-css'
-    link.rel   = 'stylesheet'
-    link.href  = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
-    document.head.appendChild(link)
-    setReady(true)
-  }, [])
+    let mounted = true
 
-  // Init map
-  useEffect(() => {
-    if (!ready || !mapRef.current) return
-    if (mapInstance.current) return   // already initialized
-
-    import('leaflet').then(L => {
-      const isDark = colorMode !== 'light'
-
-      const map = L.map(mapRef.current, {
-        center: [39.5, -98.35],
-        zoom: 4,
-        zoomControl: false,
-      })
-
-      const tileUrl = isDark
-        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-        : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
-
-      L.tileLayer(tileUrl, {
-        attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
-        subdomains: 'abcd',
-        maxZoom: 20,
-      }).addTo(map)
-
-      L.control.zoom({ position: 'bottomright' }).addTo(map)
-
-      mapInstance.current = { map, L }
-    })
-
-    return () => {
-      if (mapInstance.current) {
-        mapInstance.current.map.remove()
-        mapInstance.current = null
-      }
-    }
-  }, [ready])
-
-  // Update markers when listings change
-  useEffect(() => {
-    if (!mapInstance.current) return
-    const { map, L } = mapInstance.current
-
-    // Remove old markers
-    markersRef.current.forEach(m => m.remove())
-    markersRef.current = []
-
-    const coords = []
-
-    listings.forEach((listing, i) => {
-      // Use real lat/lng if available, otherwise scatter demo coords
-      const lat = listing.lat || (37 + (i * 2.3) % 10 - 5)
-      const lng = listing.lng || (-95 + (i * 3.1) % 20 - 10)
-      coords.push([lat, lng])
-
-      const price = listing.price
-        ? parseInt(listing.price) >= 1000000
-          ? `$${(parseInt(listing.price) / 1000000).toFixed(1)}M`
-          : `$${Math.round(parseInt(listing.price) / 1000)}K`
-        : '$—'
-
-      const icon = L.divIcon({
-        className: '',
-        html: `
-          <div style="
-            background: ${t.gradient};
-            color: #fff;
-            font-size: 11px;
-            font-weight: 800;
-            padding: 5px 10px;
-            border-radius: 20px;
-            box-shadow: 0 4px 14px ${t.accentGlow};
-            white-space: nowrap;
-            cursor: pointer;
-            font-family: Inter, system-ui, sans-serif;
-            border: 1.5px solid rgba(255,255,255,0.25);
-            transition: transform 0.15s;
-          ">
-            ${price}
-          </div>
-          <div style="
-            width: 0; height: 0;
-            border-left: 5px solid transparent;
-            border-right: 5px solid transparent;
-            border-top: 7px solid ${t.accent};
-            margin: 0 auto;
-          "></div>
-        `,
-        iconSize: [null, null],
-        iconAnchor: [30, 26],
-      })
-
-      const popup = L.popup({
-        closeButton: false,
-        className: 'zephyr-popup',
-        maxWidth: 220,
-        offset: [0, -10],
-      }).setContent(`
-        <div style="
-          font-family: Inter, system-ui, sans-serif;
-          background: ${c.surface};
-          border-radius: 12px;
-          overflow: hidden;
-          min-width: 200px;
-          box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-        ">
-          <div style="height: 100px; overflow: hidden; position: relative;">
-            <img src="${listing.photo || listing.photos?.[0] || ''}"
-              style="width:100%;height:100%;object-fit:cover;" />
-            <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.6),transparent 60%)"></div>
-            <div style="position:absolute;bottom:8px;left:10px;color:#fff;font-size:15px;font-weight:900;text-shadow:0 2px 6px rgba(0,0,0,0.5)">
-              ${price}
-            </div>
-          </div>
-          <div style="padding: 10px 12px; background: ${c.surface};">
-            <p style="font-size:12px;font-weight:700;color:${c.text};margin:0 0 2px">${listing.address || '—'}</p>
-            <p style="font-size:11px;color:${c.textMuted};margin:0 0 6px">${listing.city || ''}, ${listing.state || ''} ${listing.zip || ''}</p>
-            <div style="display:flex;gap:10px;font-size:11px;color:${c.textMuted};">
-              <span>🛏 ${listing.beds || '—'} bd</span>
-              <span>🚿 ${listing.baths || '—'} ba</span>
-              <span>📐 ${listing.sqft?.toLocaleString() || '—'} ft²</span>
-            </div>
-            <div style="margin-top:8px;padding:6px 10px;background:${t.accent};color:#fff;border-radius:8px;font-size:11px;font-weight:700;text-align:center;cursor:pointer;" onclick="document.dispatchEvent(new CustomEvent('zephyr-select-listing',{detail:'${listing.id}'}))">
-              View Details →
-            </div>
-          </div>
-        </div>
-      `)
-
-      const marker = L.marker([lat, lng], { icon }).addTo(map)
-      marker.bindPopup(popup)
-      markersRef.current.push(marker)
-    })
-
-    // Fit map to markers
-    if (coords.length > 0) {
+    ;(async () => {
       try {
-        map.fitBounds(L.latLngBounds(coords), { padding: [40, 40], maxZoom: 12 })
-      } catch (_) {}
-    }
-  }, [listings, t, c])
+        const [
+          { Map: OLMap, View },
+          { Tile: TileLayer, Vector: VectorLayer },
+          { XYZ, Vector: VectorSource },
+          { Feature },
+          { Point },
+          { Style, Circle: CircleStyle, Fill, Stroke, Text },
+          { fromLonLat },
+        ] = await Promise.all([
+          import('ol'),
+          import('ol/layer'),
+          import('ol/source'),
+          import('ol/Feature'),
+          import('ol/geom/Point'),
+          import('ol/style'),
+          import('ol/proj'),
+        ])
 
-  // Listen for popup "View Details" clicks
-  useEffect(() => {
-    const handler = (e) => {
-      const id = e.detail
-      const listing = listings.find(l => l.id === id)
-      if (listing && onSelectListing) onSelectListing(listing)
-    }
-    document.addEventListener('zephyr-select-listing', handler)
-    return () => document.removeEventListener('zephyr-select-listing', handler)
-  }, [listings, onSelectListing])
+        if (!mounted || !mapRef.current) return
+
+        // tear down old map if re-mounted
+        if (olMapRef.current) { olMapRef.current.setTarget(null); olMapRef.current = null }
+
+        const layer = LAYERS.find(l => l.id === activeLayer) || LAYERS[0]
+
+        const tileSource = new XYZ({
+          url: layer.url.replace('{r}','').replace(/\{a-c\}/g, 'a'),
+          crossOrigin: 'anonymous',
+          attributions: layer.attribution,
+        })
+
+        const tileLayer = new TileLayer({ source: tileSource })
+
+        const features = listings
+          .filter(l => l.lat && l.lon)
+          .map(listing => {
+            const f = new Feature({ geometry: new Point(fromLonLat([listing.lon, listing.lat])) })
+            f.setId(listing.id)
+            f.set('listing', listing)
+            return f
+          })
+
+        const vSource = new VectorSource({ features })
+        sourceRef.current = vSource
+
+        const vLayer = new VectorLayer({
+          source: vSource,
+          style: (f) => {
+            const listing = f.get('listing')
+            return new Style({
+              image: new CircleStyle({
+                radius: 14,
+                fill: new Fill({ color: t.accent }),
+                stroke: new Stroke({ color: '#fff', width: 2.5 }),
+              }),
+              text: new Text({
+                text: listing ? `$${Math.round(listing.price/1000)}k` : '',
+                fill: new Fill({ color: '#ffffff' }),
+                font: 'bold 9px Inter,sans-serif',
+                textBaseline: 'middle',
+              }),
+            })
+          },
+        })
+        vectorRef.current = vLayer
+
+        const center = listings.find(l => l.lat)
+          ? fromLonLat([listings.find(l=>l.lat).lon, listings.find(l=>l.lat).lat])
+          : fromLonLat([-98.5795, 39.8283])
+
+        const map = new OLMap({
+          target: mapRef.current,
+          layers: [tileLayer, vLayer],
+          view: new View({ center, zoom: listings.some(l=>l.lat) ? 11 : 4 }),
+        })
+        olMapRef.current = map
+
+        map.on('click', evt => {
+          const feat = map.forEachFeatureAtPixel(evt.pixel, f => f)
+          if (feat) {
+            const listing = feat.get('listing')
+            if (listing) setPopupInfo({ listing, pixel: evt.pixel })
+          } else {
+            setPopupInfo(null)
+          }
+        })
+
+        map.on('pointermove', evt => {
+          const hit = map.hasFeatureAtPixel(evt.pixel)
+          map.getTargetElement().style.cursor = hit ? 'pointer' : ''
+        })
+
+        if (mounted) setOlLoaded(true)
+      } catch (err) {
+        console.warn('OpenLayers load error — falling back to Leaflet canvas', err)
+        if (mounted) setOlLoaded(false)
+      }
+    })()
+
+    return () => { mounted = false }
+  }, [listings, activeLayer, t.accent])
+
+  // Layer switcher handler
+  const switchLayer = (layerId) => {
+    setActiveLayer(layerId)
+    setShowLayers(false)
+    if (onXP) onXP('CHANGE_MAP_LAYER')
+  }
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+
+      {/* OL map container */}
       <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
-      <div style={{ position: 'absolute', bottom: '16px', left: '16px', zIndex: 999, background: `${c.surface}ee`, backdropFilter: 'blur(8px)', borderRadius: '10px', padding: '7px 14px', fontSize: '12px', color: c.textMuted, fontWeight: 600, border: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: '6px', pointerEvents: 'none' }}>
-        <MapPin size={13} style={{ color: t.accent }} />
-        {listings.length} listings · ZephyrAI IDX
+
+      {/* Layer switcher */}
+      <div style={{
+        position: 'absolute', top: '12px', right: '12px', zIndex: 500,
+      }}>
+        <button
+          onClick={() => setShowLayers(!showLayers)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '6px',
+            padding: '8px 14px', borderRadius: '10px',
+            background: 'rgba(15,15,25,0.9)', backdropFilter: 'blur(10px)',
+            border: `1px solid ${t.accent}60`, color: '#fff',
+            cursor: 'pointer', fontSize: '13px', fontWeight: 700,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+          }}>
+          🌐 Layers
+        </button>
+
+        {showLayers && (
+          <div style={{
+            position: 'absolute', top: '100%', right: 0, marginTop: '8px',
+            background: 'rgba(15,15,25,0.95)', backdropFilter: 'blur(16px)',
+            border: `1px solid rgba(255,255,255,0.12)`, borderRadius: '14px',
+            padding: '10px', width: '180px',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
+          }}>
+            <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', padding: '2px 8px 8px', margin: 0 }}>Map Layers</p>
+            {LAYERS.map(layer => (
+              <button key={layer.id}
+                onClick={() => switchLayer(layer.id)}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center', gap: '8px',
+                  padding: '8px 10px', borderRadius: '8px', border: 'none',
+                  background: activeLayer === layer.id ? `${t.accent}25` : 'transparent',
+                  color: activeLayer === layer.id ? t.accent : 'rgba(255,255,255,0.8)',
+                  cursor: 'pointer', fontSize: '13px', fontWeight: activeLayer === layer.id ? 700 : 500,
+                  transition: 'all 0.15s', textAlign: 'left',
+                }}
+                onMouseEnter={e => { if (activeLayer !== layer.id) e.currentTarget.style.background = 'rgba(255,255,255,0.08)' }}
+                onMouseLeave={e => { if (activeLayer !== layer.id) e.currentTarget.style.background = 'transparent' }}>
+                {layer.label}
+                {activeLayer === layer.id && <span style={{ marginLeft: 'auto', fontSize: '12px' }}>✓</span>}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
-      <style>{`
-        .leaflet-popup-content-wrapper { padding: 0 !important; border-radius: 12px !important; border: 1px solid ${c.border} !important; overflow: hidden; background: transparent !important; box-shadow: none !important; }
-        .leaflet-popup-content { margin: 0 !important; }
-        .leaflet-popup-tip-container { display: none; }
-        .leaflet-control-zoom a { background: ${c.surface} !important; color: ${c.text} !important; border-color: ${c.border} !important; }
-        .leaflet-control-attribution { background: ${c.surface}cc !important; color: ${c.textFaint} !important; font-size: 9px !important; }
-        .leaflet-control-attribution a { color: ${t.accent} !important; }
-      `}</style>
+
+      {/* Popup */}
+      {popupInfo && (
+        <div style={{
+          position: 'absolute',
+          top: `${popupInfo.pixel[1] - 10}px`,
+          left: `${popupInfo.pixel[0] + 10}px`,
+          zIndex: 600,
+          background: 'rgba(15,15,25,0.97)', backdropFilter: 'blur(12px)',
+          border: `1px solid ${t.accent}60`, borderRadius: '14px',
+          padding: '14px', width: '220px',
+          boxShadow: `0 16px 48px rgba(0,0,0,0.6), 0 0 0 1px ${t.accent}20`,
+          pointerEvents: 'auto',
+        }}>
+          <button onClick={() => setPopupInfo(null)}
+            style={{ position: 'absolute', top: '8px', right: '8px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: '14px' }}>✕</button>
+          <img src={popupInfo.listing.photo} alt="" style={{ width: '100%', height: '100px', objectFit: 'cover', borderRadius: '8px', marginBottom: '10px' }} />
+          <p style={{ fontWeight: 900, fontSize: '16px', color: '#fff', margin: '0 0 4px' }}>
+            ${popupInfo.listing.price?.toLocaleString()}
+          </p>
+          <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', margin: '0 0 2px' }}>{popupInfo.listing.address}</p>
+          <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', margin: '0 0 10px' }}>
+            {popupInfo.listing.beds}bd · {popupInfo.listing.baths}ba · {popupInfo.listing.sqft?.toLocaleString()} ft²
+          </p>
+          <button
+            onClick={() => { onSelectListing && onSelectListing(popupInfo.listing); setPopupInfo(null) }}
+            style={{ width: '100%', padding: '8px', borderRadius: '8px', border: 'none', background: t.gradient, color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: '13px', boxShadow: `0 4px 16px ${t.accentGlow}` }}>
+            View Details
+          </button>
+        </div>
+      )}
+
+      {/* Attribution */}
+      <div style={{
+        position: 'absolute', bottom: '4px', left: '8px', zIndex: 400,
+        fontSize: '9px', color: 'rgba(255,255,255,0.5)',
+        background: 'rgba(0,0,0,0.4)', padding: '2px 6px', borderRadius: '4px',
+      }}>
+        {LAYERS.find(l => l.id === activeLayer)?.attribution}
+      </div>
     </div>
   )
 }
