@@ -14,7 +14,8 @@
     "axios": "latest",
     "lucide-react": "latest",
     "spark-md5": "latest",
-    "leaflet": "^1.9.4"
+    "leaflet": "^1.9.4",
+    "ol": "^9.2.4"
   },
   "devDependencies": {
     "autoprefixer": "latest",
