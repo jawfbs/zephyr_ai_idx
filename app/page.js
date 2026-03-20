@@ -11,6 +11,7 @@ import {
 import { THEMES } from './themes'
 import { DEMO_LISTINGS, formatPrice } from './data'
 import AccordionSection from './AccordionSection'
+import AccountPage from './AccountPage'
 
 export default function ZephyrPage() {
   const [colorMode, setColorMode] = useState('dark')
