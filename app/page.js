@@ -414,6 +414,7 @@ const accordionSections = user ? [
                         onOpenGamification={() => { setGamificationOpen(true); setAccordionOpen(false) }}
                         userStats={userStats}
                         featureSettings={featureSettings} setFeatureSettings={setFeatureSettings}
+                        onOpenHelp={() => { setTutorialOpen(true); setAccordionOpen(false) }}
                       />
                     ))}
                   </>
