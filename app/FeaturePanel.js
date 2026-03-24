@@ -661,7 +661,11 @@ export default function FeaturePanel({ listing, allListings, t, c, enabledFeatur
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9997, backdropFilter: 'blur(8px)', padding: '16px' }}
       onClick={onClose}>
       <div onClick={e => e.stopPropagation()}
-        style={{ background: 'linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%)', border: `1px solid ${t.accent}40`, borderRadius: '20px', width: '100%', maxWidth: '580px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: `0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px ${t.accent}20` }}>
+        style={{ background: 'linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%)',
+          border: `1px solid ${t.accent}40`,
+          borderRadius: '20px',
+          width: '100%', maxWidth: '600px',
+          maxHeight: '92vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: `0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px ${t.accent}20` }}>
 
         {/* Header */}
         <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
