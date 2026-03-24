@@ -681,15 +681,27 @@ export default function FeaturePanel({ listing, allListings, t, c, enabledFeatur
           <button onClick={onClose} style={{ width: '30px', height: '30px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
         </div>
 
-        {/* Feature tabs */}
-        <div style={{ display: 'flex', overflowX: 'auto', padding: '10px 14px', gap: '6px', flexShrink: 0, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+
+{/* Feature tabs — 2-row wrap grid, no scroll */}
+        <div style={{ padding: '8px 12px', flexShrink: 0, borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
           {availableFeatures.map(f => (
             <button key={f.id} onClick={() => setActiveFeature(f.id)}
-              style={{ padding: '6px 12px', borderRadius: '20px', border: `1px solid ${activeFeature === f.id ? t.accent : 'rgba(255,255,255,0.15)'}`, background: activeFeature === f.id ? `${t.accent}25` : 'transparent', color: activeFeature === f.id ? t.accent : 'rgba(255,255,255,0.6)', cursor: 'pointer', fontSize: '12px', fontWeight: 700, whiteSpace: 'nowrap', transition: 'all 0.2s', flexShrink: 0 }}>
+              style={{
+                padding: '4px 9px', borderRadius: '16px',
+                border: `1px solid ${activeFeature === f.id ? t.accent : 'rgba(255,255,255,0.12)'}`,
+                background: activeFeature === f.id ? `${t.accent}30` : 'rgba(255,255,255,0.04)',
+                color: activeFeature === f.id ? t.accent : 'rgba(255,255,255,0.55)',
+                cursor: 'pointer', fontSize: '10px', fontWeight: activeFeature === f.id ? 800 : 600,
+                whiteSpace: 'nowrap', transition: 'all 0.15s', lineHeight: 1.3,
+                boxShadow: activeFeature === f.id ? `0 0 8px ${t.accentGlow}` : 'none',
+              }}
+              onMouseEnter={e => { if (activeFeature !== f.id) { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#fff' } }}
+              onMouseLeave={e => { if (activeFeature !== f.id) { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = 'rgba(255,255,255,0.55)' } }}>
               {f.label}
             </button>
           ))}
         </div>
+
 
         {/* Active feature content */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
