@@ -23,6 +23,7 @@ import FeaturePanel         from './FeaturePanel'
 import { isProfessional, getLevelLabel, getLevelColor, getLevelBadge } from './auth'
 import { addXP, checkAchievements, DEFAULT_STATS, getLevel, ACHIEVEMENTS, XP_ACTIONS } from './gamification'
 import { DEFAULT_FEATURE_SETTINGS } from './features'
+import Tutorial from './Tutorial'
 
 const LS_KEY  = 'zephyr_gstats'
 const FS_KEY  = 'zephyr_features'
@@ -34,7 +35,7 @@ function saveFeat(s)    { try { localStorage.setItem(FS_KEY,  JSON.stringify(s))
 let toastId = 0
 
 export default function ZephyrPage() {
-  const [colorMode,     setColorMode]     = useState('mellow')
+  const [colorMode,     setColorMode]     = useState('light')
   const [activeTheme,   setActiveTheme]   = useState(THEMES.nature.variants[1])
   const [themeCategory, setThemeCategory] = useState('nature')
 
@@ -76,12 +77,23 @@ export default function ZephyrPage() {
   const accordionRef = useRef(null)
   const contactRef   = useRef(null)
 
-  useEffect(() => {
+useEffect(() => {
     setUserStats(loadStats())
     setFeatureSettings(loadFeat())
+    // Load color mode from cookie
+    const cm = document.cookie.split(';').find(c => c.trim().startsWith('zephyr_colormode='))
+    if (cm) setColorMode(cm.split('=')[1].trim())
+    // Check tutorial cookie
+    const skip = document.cookie.split(';').find(c => c.trim().startsWith('zephyr_skip_tutorial='))
+    if (!skip) setTutorialOpen(true)
   }, [])
 
-  useEffect(() => { saveFeat(featureSettings) }, [featureSettings])
+useEffect(() => { saveFeat(featureSettings) }, [featureSettings])
+  useEffect(() => {
+    document.cookie = `zephyr_colormode=${colorMode}; max-age=31536000; path=/`
+  }, [colorMode])
+
+  const [tutorialOpen, setTutorialOpen] = useState(false)
 
   const grantXP = useCallback((action) => {
     if (!gamificationEnabled) return
@@ -209,17 +221,18 @@ export default function ZephyrPage() {
 
   const enabledFeatCount = Object.values(featureSettings).filter(Boolean).length
 
-  const accordionSections = user ? [
+const accordionSections = user ? [
     { label:'👤 Account',       isAccount:true },
     { label:'🔔 Notifications', isNotifications:true },
     { label:'🎨 Appearance',    isAppearance:true },
     { label:'🎮 Gamification',  isGamification:true },
-    { label:`🤖 AI Features (${enabledFeatCount})`, isAIFeatures:true },
+    { label:`🤖 AI Features`,   isAIFeatures:true },
+    { label:'❓ Help & Tour',   isHelp:true },
     ...(isPro ? [{ label:'🔌 Integrations', isIntegrations:true }] : []),
     { label:'🔒 Privacy',       isPrivacy:true },
   ] : []
 
-  const navItems      = ['Buy','Rent','Sell','Agents','Mortgage']
+  const navItems      = ['Buy','Rent']
   const propertyTypes = ['Single Family','Condo','Townhouse','Multi-Family','Land']
   const sortOptions   = [
     { value:'price_desc',label:'Price: High to Low' },
@@ -244,7 +257,13 @@ export default function ZephyrPage() {
           <button onClick={() => setNewAchievement(null)} style={{ background:'none',border:'none',color:'rgba(255,255,255,0.4)',cursor:'pointer',fontSize:'16px',marginLeft:'auto' }}>✕</button>
         </div>
       )}
-
+{tutorialOpen && (
+        <Tutorial
+          c={c} t={t}
+          onClose={() => setTutorialOpen(false)}
+          onSignIn={() => setSignInOpen(true)}
+        />
+      )}
       {accountOpen      && <AccountPage    c={c} t={t} onClose={() => setAccountOpen(false)} />}
       {signInOpen       && <SignInModal     c={c} t={t} onClose={() => setSignInOpen(false)} onSignIn={handleSignIn} />}
       {gamificationOpen && <GamificationPanel c={c} t={t} stats={userStats} onClose={() => setGamificationOpen(false)} />}
@@ -395,6 +414,7 @@ export default function ZephyrPage() {
                         onOpenGamification={() => { setGamificationOpen(true); setAccordionOpen(false) }}
                         userStats={userStats}
                         featureSettings={featureSettings} setFeatureSettings={setFeatureSettings}
+                        onOpenHelp={() => { setTutorialOpen(true); setAccordionOpen(false) }}
                       />
                     ))}
                   </>
@@ -411,9 +431,7 @@ export default function ZephyrPage() {
                       style={{ width:'100%',padding:'12px',borderRadius:'10px',border:'none',background:t.gradient,color:'#fff',cursor:'pointer',fontSize:'14px',fontWeight:700,boxShadow:`0 4px 16px ${t.accentGlow}`,display:'flex',alignItems:'center',justifyContent:'center',gap:'8px' }}>
                       <User size={15} /> Sign In / Register
                     </button>
-                    <div style={{ marginTop:'12px',padding:'10px',borderRadius:'10px',background:c.surfaceAlt,border:`1px solid ${c.border}` }}>
-                      <p style={{ fontSize:'11px',color:c.textMuted,textAlign:'center',margin:0 }}>🏢 Brokerage &nbsp;|&nbsp; 👥 Team &nbsp;|&nbsp; 🏡 Agent &nbsp;|&nbsp; 🔑 Homebuyer</p>
-                    </div>
+                    
                   </div>
                 )}
               </div>

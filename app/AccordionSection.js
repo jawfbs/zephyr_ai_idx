@@ -138,7 +138,32 @@ export default function AccordionSection({
               </button>
             </div>
           )}
-
+{section.isHelp&&(
+            <div>
+              <p style={{ fontSize:'12px', color:c.textMuted, marginBottom:'12px', lineHeight:1.6 }}>
+                New to ZephyrAI? The interactive tour walks you through every feature step by step.
+              </p>
+              <button onClick={()=>onOpenHelp?.()} style={{ width:'100%', padding:'12px', borderRadius:'10px', border:`1px solid ${t.accent}50`, background:`${t.accent}15`, color:t.accent, cursor:'pointer', fontSize:'13px', fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', gap:'8px', marginBottom:'8px' }}>
+                🎓 Launch Interactive Tour
+              </button>
+              <div style={{ padding:'10px 12px', borderRadius:'10px', background:c.surfaceAlt, border:`1px solid ${c.border}` }}>
+                {[
+                  ['🔍', 'Search & Filters'],
+                  ['⚡', '12 AI Features'],
+                  ['🗺️', '8 Map Layers'],
+                  ['📊', 'Neighborhood Data'],
+                  ['🎮', 'Gamification'],
+                  ['⚙️', 'All Settings'],
+                ].map(([icon, label]) => (
+                  <div key={label} style={{ display:'flex', alignItems:'center', gap:'8px', padding:'5px 0', borderBottom:`1px solid ${c.border}` }}>
+                    <span style={{ fontSize:'14px' }}>{icon}</span>
+                    <span style={{ fontSize:'12px', color:c.textMuted }}>{label}</span>
+                    <span style={{ marginLeft:'auto', fontSize:'11px', color:t.accent, fontWeight:600 }}>Covered ✓</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {section.isPrivacy&&(
             <div>
               <Toggle value={privacy.analytics} onChange={v=>setPrivacy(p=>({...p,analytics:v}))} label="Analytics"   sub="Help us improve ZephyrAI" />
