@@ -678,15 +678,35 @@ const accordionSections = user ? [
                           <span style={{ display:'flex',alignItems:'center',gap:'3px',fontSize:'10px',color:c.textFaint }}>
                             <Clock size={10} />{listing.daysOnMarket===0?'Just listed':`${listing.daysOnMarket}d`}
                           </span>
-                          {/* AI Features Button */}
+{/* AI Features Button */}
                           {anyFeatureOn && (
                             <button
                               onClick={e => { e.stopPropagation(); setFeatureListing(listing); grantXP('VIEW_LISTING') }}
-                              style={{ display:'flex',alignItems:'center',gap:'3px',padding:'2px 8px',borderRadius:'8px',border:`1px solid ${t.accent}40`,background:`${t.accent}15`,cursor:'pointer',fontSize:'10px',fontWeight:700,color:t.accent,transition:'all 0.2s' }}
-                              onMouseEnter={e=>{e.currentTarget.style.background=`${t.accent}30`}}
-                              onMouseLeave={e=>{e.currentTarget.style.background=`${t.accent}15`}}
-                              title="Open AI Features">
-                              <Zap size={9} /> AI
+                              style={{
+                                display:'flex', alignItems:'center', gap:'5px',
+                                padding:'4px 10px', borderRadius:'20px',
+                                border:`1.5px solid ${t.accent}`,
+                                background: t.gradient,
+                                cursor:'pointer', fontSize:'11px', fontWeight:800,
+                                color:'#fff',
+                                boxShadow:`0 0 10px ${t.accentGlow}, 0 2px 8px rgba(0,0,0,0.2)`,
+                                animation:'aiPulse 2.2s ease-in-out infinite',
+                                transition:'all 0.2s',
+                                flexShrink: 0,
+                              }}
+                              onMouseEnter={e => {
+                                e.currentTarget.style.transform='scale(1.08)'
+                                e.currentTarget.style.boxShadow=`0 0 18px ${t.accentGlow}, 0 4px 12px rgba(0,0,0,0.3)`
+                                e.currentTarget.style.animation='none'
+                              }}
+                              onMouseLeave={e => {
+                                e.currentTarget.style.transform='scale(1)'
+                                e.currentTarget.style.boxShadow=`0 0 10px ${t.accentGlow}, 0 2px 8px rgba(0,0,0,0.2)`
+                                e.currentTarget.style.animation='aiPulse 2.2s ease-in-out infinite'
+                              }}
+                              title="Open 12 AI Features for this listing">
+                              <Zap size={11} style={{ filter:'drop-shadow(0 0 3px rgba(255,255,255,0.8))' }} />
+                              AI Insights
                             </button>
                           )}
                         </div>
@@ -715,6 +735,14 @@ const accordionSections = user ? [
         ::-webkit-scrollbar-thumb:hover{background:${t.accent}}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
         @keyframes carouselFade{from{opacity:0.4;transform:scale(1.02)}to{opacity:1;transform:scale(1)}}
+        @keyframes aiPulse{
+          0%,100%{ box-shadow: 0 0 8px ${t.accentGlow}, 0 2px 8px rgba(0,0,0,0.2); transform: scale(1); }
+          50%    { box-shadow: 0 0 20px ${t.accentGlow}, 0 0 32px ${t.accentGlow}, 0 2px 8px rgba(0,0,0,0.2); transform: scale(1.05); }
+        }
+        @keyframes aiSlideIn{
+          from{ opacity:0; transform:translateY(4px); }
+          to  { opacity:1; transform:translateY(0); }
+        }
       `}</style>
     </div>
   )
