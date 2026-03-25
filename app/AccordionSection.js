@@ -297,17 +297,45 @@ export default function AccordionSection({
                 {testing ? '⏳ Testing connection…' : '🔌 Test Connection'}
               </button>
 
-              {/* Test result */}
               {testResult && (
-                <div style={{ padding:'10px 12px', borderRadius:'8px', marginBottom:'8px', background:testResult.success ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)', border:`1px solid ${testResult.success ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}` }}>
-                  <p style={{ fontSize:'12px', fontWeight:600, color:testResult.success ? '#22c55e' : '#ef4444', margin:0 }}>
-                    {testResult.message}
-                  </p>
-                  {testResult.success && testResult.resultCount !== undefined && (
-                    <p style={{ fontSize:'11px', color:c.textMuted, margin:'3px 0 0' }}>
-                      Returned {testResult.resultCount} sample listing{testResult.resultCount !== 1 ? 's' : ''}
-                      {testResult.sampleCity ? ` from ${testResult.sampleCity}` : ''}
+                <div style={{ padding:'12px', borderRadius:'8px', marginBottom:'8px', background:testResult.success ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.08)', border:`1px solid ${testResult.success ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}` }}>
+                  {/* Main message — preserves newlines */}
+                  {(testResult.message||'').split('\n').map((line,i) => (
+                    <p key={i} style={{ fontSize: i===0 ? '12px' : '11px', fontWeight: i===0 ? 700 : 400, color: i===0 ? (testResult.success?'#22c55e':'#ef4444') : c.textMuted, margin: i===0 ? '0 0 6px' : '2px 0 0', lineHeight:1.5 }}>
+                      {line}
                     </p>
+                  ))}
+
+                  {/* Success extras */}
+                  {testResult.success && (
+                    <div style={{ marginTop:'6px', padding:'6px 8px', borderRadius:'6px', background:'rgba(34,197,94,0.1)', border:'1px solid rgba(34,197,94,0.2)' }}>
+                      <p style={{ fontSize:'11px', color:'#22c55e', margin:0, fontWeight:600 }}>
+                        Working format: {testResult.workingFormat} · {testResult.resultCount} listing(s) returned
+                        {testResult.sampleCity ? ` · Sample city: ${testResult.sampleCity}` : ''}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Debug info — always show on failure */}
+                  {!testResult.success && testResult.debug && (
+                    <div style={{ marginTop:'8px' }}>
+                      <p style={{ fontSize:'10px', fontWeight:700, color:c.textMuted, marginBottom:'4px', textTransform:'uppercase', letterSpacing:'0.5px' }}>Debug Info</p>
+                      <div style={{ background:'rgba(0,0,0,0.3)', borderRadius:'6px', padding:'8px', fontFamily:'monospace' }}>
+                        <p style={{ fontSize:'10px', color:'#94a3b8', margin:'0 0 3px', wordBreak:'break-all' }}>
+                          URL: {testResult.debug?.url}
+                        </p>
+                        {(testResult.debug?.testedFormats||[]).map((f,i) => (
+                          <p key={i} style={{ fontSize:'10px', color: f.error ? '#ef4444' : f.status===200 ? '#22c55e' : '#f59e0b', margin:'1px 0 0' }}>
+                            {f.format}: HTTP {f.status||'error'} {f.error ? `(${f.error})` : ''}
+                          </p>
+                        ))}
+                        {testResult.debug?.sparkErrorMessage && (
+                          <p style={{ fontSize:'10px', color:'#fbbf24', margin:'4px 0 0' }}>
+                            Spark: "{testResult.debug.sparkErrorMessage}"
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   )}
                 </div>
               )}
