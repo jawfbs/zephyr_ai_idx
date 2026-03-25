@@ -470,9 +470,7 @@ export default function ZephyrPage() {
                       style={{ width:'100%', padding:'12px', borderRadius:'10px', border:'none', background:t.gradient, color:'#fff', cursor:'pointer', fontSize:'14px', fontWeight:700, boxShadow:`0 4px 16px ${t.accentGlow}`, display:'flex', alignItems:'center', justifyContent:'center', gap:'8px' }}>
                       <User size={15} /> Sign In / Register
                     </button>
-                    <div style={{ marginTop:'12px', padding:'10px', borderRadius:'10px', background:c.surfaceAlt, border:`1px solid ${c.border}` }}>
-                      <p style={{ fontSize:'11px', color:c.textMuted, textAlign:'center', margin:0 }}>🏢 Brokerage &nbsp;|&nbsp; 👥 Team &nbsp;|&nbsp; 🏡 Agent &nbsp;|&nbsp; 🔑 Homebuyer</p>
-                    </div>
+                  
                   </div>
                 )}
               </div>
