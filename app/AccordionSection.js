@@ -71,14 +71,40 @@ export default function AccordionSection({
             </div>
           )}
 
-          {section.isAppearance&&(
+{section.isAppearance&&(
             <div>
+              {/* ── Color Mode ── */}
               <p style={{ fontSize:'11px',color:c.textMuted,fontWeight:700,textTransform:'uppercase',letterSpacing:'1px',marginBottom:'8px' }}>Color Mode</p>
               <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'6px',marginBottom:'14px' }}>
                 {[['light','☀️ Light'],['mellow','🌆 Mellow'],['dark','🌑 Dark']].map(([id,label])=>(
                   <button key={id} onClick={()=>setColorMode(id)} style={{ padding:'8px 4px',borderRadius:'8px',border:`1px solid ${colorMode===id?t.accent:c.border}`,background:colorMode===id?`${t.accent}20`:'transparent',color:colorMode===id?t.accent:c.text,cursor:'pointer',fontSize:'11px',fontWeight:600 }}>{label}</button>
                 ))}
               </div>
+
+              {/* ── Site Layout ── */}
+              <p style={{ fontSize:'11px',color:c.textMuted,fontWeight:700,textTransform:'uppercase',letterSpacing:'1px',marginBottom:'8px' }}>Site Layout</p>
+              <div style={{ display:'flex',flexDirection:'column',gap:'6px',marginBottom:'14px' }}>
+                {(LAYOUTS||[]).map(layout=>{
+                  const isActive = (activeLayoutId||'default') === layout.id
+                  return (
+                    <button key={layout.id} onClick={()=>setActiveLayoutId?.(layout.id)}
+                      style={{ display:'flex',alignItems:'center',gap:'10px',padding:'10px 12px',borderRadius:'10px',border:`1px solid ${isActive?t.accent:c.border}`,background:isActive?`${t.accent}12`:'transparent',cursor:'pointer',transition:'all 0.2s',textAlign:'left',width:'100%' }}
+                      onMouseEnter={e=>{ if(!isActive){ e.currentTarget.style.background=c.surfaceAlt; e.currentTarget.style.borderColor=`${t.accent}40` } }}
+                      onMouseLeave={e=>{ if(!isActive){ e.currentTarget.style.background='transparent'; e.currentTarget.style.borderColor=c.border } }}>
+                      <div style={{ width:'36px',height:'36px',borderRadius:'8px',background:layout.preview,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'16px',boxShadow:`inset 0 0 0 1px rgba(255,255,255,0.1)` }}>
+                        <span style={{ filter:'drop-shadow(0 1px 2px rgba(0,0,0,0.5))',fontSize:'14px' }}>{layout.icon}</span>
+                      </div>
+                      <div style={{ flex:1,minWidth:0 }}>
+                        <p style={{ fontWeight:700,fontSize:'12px',color:isActive?t.accent:c.text,margin:0 }}>{layout.name}</p>
+                        <p style={{ fontSize:'10px',color:c.textMuted,margin:'1px 0 0',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{layout.description}</p>
+                      </div>
+                      {isActive&&<div style={{ width:'18px',height:'18px',borderRadius:'50%',background:t.accent,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}><span style={{ color:'#fff',fontSize:'10px',fontWeight:900 }}>✓</span></div>}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* ── Theme Category ── */}
               <p style={{ fontSize:'11px',color:c.textMuted,fontWeight:700,textTransform:'uppercase',letterSpacing:'1px',marginBottom:'8px' }}>Theme Category</p>
               <div style={{ display:'flex',gap:'6px',flexWrap:'wrap',marginBottom:'12px' }}>
                 {Object.keys(THEMES).map(cat=>(
