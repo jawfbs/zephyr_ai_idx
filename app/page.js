@@ -24,6 +24,7 @@ import { isProfessional, getLevelLabel, getLevelColor, getLevelBadge } from './a
 import { addXP, checkAchievements, DEFAULT_STATS, getLevel, ACHIEVEMENTS, XP_ACTIONS } from './gamification'
 import { DEFAULT_FEATURE_SETTINGS } from './features'
 import Tutorial from './Tutorial'
+import { LAYOUTS, DEFAULT_LAYOUT_ID } from './layouts'
 
 const LS_KEY  = 'zephyr_gstats'
 const FS_KEY  = 'zephyr_features'
