@@ -232,8 +232,8 @@ export default function ZephyrPage() {
     { label:'🎨 Appearance',    isAppearance:true },
     { label:'🎮 Gamification',  isGamification:true },
     { label:'🤖 AI Features',   isAIFeatures:true },
-    { label:'❓ Help & Tour',   isHelp:true },
     ...(isPro ? [{ label:'🔌 Integrations', isIntegrations:true }] : []),
+    { label:'❓ Help & Tour',   isHelp:true },
     { label:'🔒 Privacy',       isPrivacy:true },
   ] : []
 
