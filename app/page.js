@@ -278,10 +278,13 @@ const accordionSections = user ? [
       {activeLayoutId === 'bold_tech' && (
         <div style={{
           position:'fixed', inset:0, pointerEvents:'none', zIndex:0,
-          backgroundImage: activeLayout.vars['--scanline'],
+
+
+backgroundImage: activeLayout.vars?.['--scanline'] || 'none',
+        }} />
+
+        
       </div> 
-      }} />
-      )}
 
       {gamificationEnabled && <XPToast toasts={toasts} />}
 
