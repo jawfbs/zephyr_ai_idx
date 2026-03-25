@@ -894,7 +894,8 @@ export default function ZephyrPage() {
 
                 return (
                   <div key={listing.id}
-                    {...(cardIndex === 0 ? { 'data-tour': 'listing-card' } : {})}
+                    data-tour={cardIndex === 0 ? 'listing-card' : undefined}
+                    onMouseEnter={()=>setHoveredCard(listing.id)}
                     onMouseEnter={()=>setHoveredCard(listing.id)}
                     onMouseLeave={()=>setHoveredCard(null)}
                     style={{ background:cardBg, borderRadius:cardRadius, overflow:'hidden', border:cardBorder, cursor:'pointer', transition:'all 0.25s', boxShadow:cardShadow, transform:isHovered?'translateY(-3px)':'none', display:viewMode==='list'?'flex':'block' }}>
@@ -950,9 +951,9 @@ export default function ZephyrPage() {
                           <span style={{ display:'flex', alignItems:'center', gap:'3px', fontSize:'10px', color:c.textFaint }}>
                             <Clock size={10} />{listing.daysOnMarket===0?'Just listed':`${listing.daysOnMarket}d`}
                           </span>
-                       {anyFeatureOn && (
+{anyFeatureOn && (
                             <button
-                              {...(cardIndex === 0 ? { 'data-tour': 'ai-button' } : {})}
+                              data-tour={cardIndex === 0 ? 'ai-button' : undefined}
                               onClick={e=>{ e.stopPropagation(); setFeatureListing(listing); grantXP('VIEW_LISTING') }}
                               style={{ display:'flex', alignItems:'center', gap:'5px', padding:'4px 10px', borderRadius:'20px', border:`1.5px solid ${t.accent}`, background:t.gradient, cursor:'pointer', fontSize:'11px', fontWeight:800, color:'#fff', boxShadow:`0 0 10px ${t.accentGlow},0 2px 8px rgba(0,0,0,0.2)`, animation:'aiPulse 2.2s ease-in-out infinite', transition:'all 0.2s', flexShrink:0 }}
                               onMouseEnter={e=>{ e.currentTarget.style.transform='scale(1.08)'; e.currentTarget.style.boxShadow=`0 0 18px ${t.accentGlow},0 4px 12px rgba(0,0,0,0.3)`; e.currentTarget.style.animation='none' }}
