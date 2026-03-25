@@ -396,11 +396,41 @@ export default function ZephyrPage() {
 
   const closeAllFilters = () => { setPriceOpen(false); setBedsOpen(false); setTypeOpen(false); setSortOpen(false) }
 
-  const handleSearch = (e) => {
+const handleSearch = (e) => {
     e.preventDefault()
     grantXP('SEARCH')
     setUserStats(ps => { const ns = { ...ps, searchCount:(ps.searchCount||0)+1 }; saveStats(ns); return ns })
     setLoading(true)
+
+    // If Spark credentials are active — query live API
+    if (apiCreds?.apiKey) {
+      const params = new URLSearchParams({
+        query:     query,
+        apiKey:    apiCreds.apiKey    || '',
+        apiSecret: apiCreds.apiSecret || '',
+        mode:      apiCreds.mode      || 'replication',
+        limit:     '50',
+      })
+      fetch(`/api/listings?${params.toString()}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.success && data.listings?.length > 0) {
+            setListings(data.listings)
+          } else {
+            // Fall back to client-side filter of existing listings
+            const q = query.toLowerCase()
+            const filtered = listings.filter(l =>
+              !query || l.city.toLowerCase().includes(q) || l.address.toLowerCase().includes(q) || l.zip.includes(q)
+            )
+            setListings(filtered.length > 0 ? filtered : listings)
+          }
+          setLoading(false)
+        })
+        .catch(() => { setLoading(false) })
+      return
+    }
+
+    // Demo mode — client-side filter
     setTimeout(() => {
       const q = query.toLowerCase()
       const filtered = DEMO_LISTINGS.filter(l =>
