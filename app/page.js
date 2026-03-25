@@ -918,4 +918,90 @@ export default function ZephyrPage() {
                           </button>
                           <button onClick={e=>{e.stopPropagation();handleHide(listing.id)}} style={{ width:'28px', height:'28px', borderRadius:'50%', background:'rgba(0,0,0,0.5)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all 0.2s' }}
                             onMouseEnter={e=>e.currentTarget.style.background='rgba(239,68,68,0.7)'}
-                            onMouseLeave={e=>e.currentTarget.style.background='rgba(0
+                            onMouseLeave={e=>e.currentTarget.style.background='rgba(0,0,0,0.5)'}>
+                            <EyeOff size={13} color="#fff" />
+                          </button>
+                        </div>
+                      )}
+                      <div style={{ position:'absolute', bottom:'10px', left:'10px', zIndex:15, pointerEvents:'none' }}>
+                        <span style={{ color:'#fff', fontWeight:900, fontSize:'19px', textShadow:'0 2px 8px rgba(0,0,0,0.6)' }}>{formatPrice(listing.price)}</span>
+                      </div>
+                    </div>
+
+                    <div style={{ padding:'12px', flex:1 }}
+                      onClick={()=>{ setSelectedListing(listing); grantXP('VIEW_LISTING') }}>
+                      <div style={{ display:'flex', gap:'12px', marginBottom:'8px' }}>
+                        {[{icon:Bed,val:listing.beds,unit:'bd'},{icon:Bath,val:listing.baths,unit:'ba'},{icon:Maximize2,val:listing.sqft?.toLocaleString(),unit:'ft²'}].map(({icon:Icon,val,unit})=>(
+                          <div key={unit} style={{ display:'flex', alignItems:'center', gap:'4px' }}>
+                            <Icon size={12} style={{ color:t.accent }} />
+                            <span style={{ fontSize:'12px', fontWeight:700, color:c.text }}>{val}</span>
+                            <span style={{ fontSize:'10px', color:c.textFaint }}>{unit}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ display:'flex', alignItems:'flex-start', gap:'4px', marginBottom:'8px' }}>
+                        <MapPin size={12} style={{ color:t.accent, marginTop:'2px', flexShrink:0 }} />
+                        <div>
+                          <p style={{ fontSize:'12px', fontWeight:700, color:c.text, margin:0 }}>{listing.address}</p>
+                          <p style={{ fontSize:'11px', color:c.textMuted, margin:'1px 0 0' }}>{listing.city}, {listing.state} {listing.zip}</p>
+                        </div>
+                      </div>
+                      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', paddingTop:'8px', borderTop:`1px solid ${c.border}` }}>
+                        <span style={{ padding:'2px 7px', borderRadius:'5px', background:`${t.accent}15`, color:t.accent, fontSize:'10px', fontWeight:600, border:`1px solid ${t.accent}30` }}>{listing.type}</span>
+                        <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
+                          <span style={{ display:'flex', alignItems:'center', gap:'3px', fontSize:'10px', color:c.textFaint }}>
+                            <Clock size={10} />{listing.daysOnMarket===0?'Just listed':`${listing.daysOnMarket}d`}
+                          </span>
+                          {anyFeatureOn && (
+                            <button
+                              onClick={e=>{ e.stopPropagation(); setFeatureListing(listing); grantXP('VIEW_LISTING') }}
+                              style={{ display:'flex', alignItems:'center', gap:'5px', padding:'4px 10px', borderRadius:'20px', border:`1.5px solid ${t.accent}`, background:t.gradient, cursor:'pointer', fontSize:'11px', fontWeight:800, color:'#fff', boxShadow:`0 0 10px ${t.accentGlow},0 2px 8px rgba(0,0,0,0.2)`, animation:'aiPulse 2.2s ease-in-out infinite', transition:'all 0.2s', flexShrink:0 }}
+                              onMouseEnter={e=>{ e.currentTarget.style.transform='scale(1.08)'; e.currentTarget.style.boxShadow=`0 0 18px ${t.accentGlow},0 4px 12px rgba(0,0,0,0.3)`; e.currentTarget.style.animation='none' }}
+                              onMouseLeave={e=>{ e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow=`0 0 10px ${t.accentGlow},0 2px 8px rgba(0,0,0,0.2)`; e.currentTarget.style.animation='aiPulse 2.2s ease-in-out infinite' }}
+                              title="Open AI Features for this listing">
+                              <Zap size={11} style={{ filter:'drop-shadow(0 0 3px rgba(255,255,255,0.8))' }} />
+                              AI Insights
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {viewMode==='split' && (
+          <div style={{ flex:1, position:'relative', overflow:'hidden', borderLeft:`1px solid ${c.border}` }}>
+            <MapPanel listings={displayed} t={t} c={c} colorMode={colorMode} onSelectListing={setSelectedListing} onXP={grantXP} />
+          </div>
+        )}
+      </div>
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        *{box-sizing:border-box;margin:0;padding:0}
+        ::-webkit-scrollbar{width:6px}
+        ::-webkit-scrollbar-track{background:transparent}
+        ::-webkit-scrollbar-thumb{background:${t.accent}50;border-radius:10px}
+        ::-webkit-scrollbar-thumb:hover{background:${t.accent}}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+        @keyframes carouselFade{from{opacity:0.4;transform:scale(1.02)}to{opacity:1;transform:scale(1)}}
+        @keyframes aiPulse{
+          0%,100%{box-shadow:0 0 8px ${t.accentGlow},0 2px 8px rgba(0,0,0,0.2);transform:scale(1);}
+          50%{box-shadow:0 0 20px ${t.accentGlow},0 0 32px ${t.accentGlow},0 2px 8px rgba(0,0,0,0.2);transform:scale(1.05);}
+        }
+        @keyframes aiSlideIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+        ${activeLayoutId==='bold_tech'?`
+          h1,h2,h3,h4{font-weight:900!important;letter-spacing:-0.03em!important;}
+          input:focus,select:focus,textarea:focus{box-shadow:0 0 0 2px rgba(0,245,255,0.4)!important;border-color:rgba(0,245,255,0.8)!important;}
+        `:''}
+        ${activeLayoutId==='editorial'?`
+          h1,h2,h3{font-family:Georgia,'Times New Roman',serif!important;letter-spacing:-0.01em!important;}
+        `:''}
+      `}</style>
+    </div>
+  )
+}
