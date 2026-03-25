@@ -269,14 +269,11 @@ const accordionSections = user ? [
         ...Object.fromEntries(Object.entries(activeLayout.vars || {}).map(([k,v]) => [k,v])),
       }}
     >
-      {/* Bold Tech grid/scanline overlay */}
+{activeLayoutId === 'bold_tech' && (
+        <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0, backgroundImage: activeLayout.vars['--grid-overlay'], backgroundSize:'40px 40px', opacity:0.6 }} />
+      )}
       {activeLayoutId === 'bold_tech' && (
-        <div style={{
-          position:'fixed', inset:0, pointerEvents:'none', zIndex:0,
-          backgroundImage: activeLayout.vars['--grid-overlay'],
-          backgroundSize: '40px 40px',
-          opacity: 0.6,
-        }} />
+        <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0, backgroundImage: activeLayout.vars['--scanline'] }} />
       )}
       {activeLayoutId === 'bold_tech' && (
         <div style={{
