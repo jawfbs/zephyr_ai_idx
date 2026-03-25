@@ -259,16 +259,16 @@ const accordionSections = user ? [
   ]
 
   return (
-<div
-      style={{
-        display:'flex', flexDirection:'column', height:'100vh', overflow:'hidden',
-        fontFamily: activeLayout.vars?.['--font-body'] || '"Inter",system-ui,sans-serif',
-        backgroundColor:c.bg, color:c.text, transition:'background 0.3s,color 0.3s',
-        position:'relative',
-        // CSS variable injection
-        ...Object.fromEntries(Object.entries(activeLayout.vars || {}).map(([k,v]) => [k,v])),
-      }}
-    >
+<div style={{ display:'flex', flexDirection:'column', height:'100vh', overflow:'hidden', fontFamily: activeLayout.vars?.['--font-body'] || '"Inter",system-ui,sans-serif', backgroundColor:c.bg, color:c.text, transition:'background 0.3s,color 0.3s', position:'relative' }}>
+
+      {activeLayoutId === 'bold_tech' && (
+        <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0, backgroundImage: activeLayout.vars?.['--grid-overlay'] || 'none', backgroundSize:'40px 40px', opacity:0.6 }} />
+      )}
+
+      {activeLayoutId === 'bold_tech' && (
+        <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0, backgroundImage: activeLayout.vars?.['--scanline'] || 'none' }} />
+      )}
+    
 {activeLayoutId === 'bold_tech' && (
         <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0, backgroundImage: activeLayout.vars['--grid-overlay'], backgroundSize:'40px 40px', opacity:0.6 }} />
       )}
