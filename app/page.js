@@ -844,18 +844,15 @@ export default function ZephyrPage() {
                   Fargo · West Fargo · Moorhead · Horace · Harwood · Dilworth
                 </p>
               </div>
-              {gamificationEnabled && user && (
-                <button onClick={()=>setGamificationOpen(true)}
-                  style={{ display:'flex', alignItems:'center', gap:'8px', padding:'8px 14px', borderRadius:'12px', border:`1px solid ${t.accent}40`, background:`${t.accent}10`, cursor:'pointer', transition:'all 0.2s' }}
-                  onMouseEnter={e=>e.currentTarget.style.background=`${t.accent}20`}
-                  onMouseLeave={e=>e.currentTarget.style.background=`${t.accent}10`}>
-                  <Trophy size={14} style={{ color:t.accent }} />
-                  <div style={{ textAlign:'left' }}>
-                    <p style={{ fontSize:'11px', fontWeight:800, color:t.accent, margin:0 }}>{curLevel.badge} {curLevel.title}</p>
-                    <p style={{ fontSize:'10px', color:c.textMuted, margin:0 }}>{(userStats.achievements||[]).length}/{ACHIEVEMENTS.length} achievements</p>
-                  </div>
-                </button>
-              )}
+{gamificationEnabled && user && (
+            <button data-tour="xp-badge" onClick={()=>setGamificationOpen(true)}
+              style={{ display:'flex', alignItems:'center', gap:'6px', padding:'6px 12px', borderRadius:'10px', border:`1px solid ${t.accent}50`, background:`${t.accent}15`, cursor:'pointer', transition:'all 0.2s' }}
+              onMouseEnter={e=>e.currentTarget.style.background=`${t.accent}25`}
+              onMouseLeave={e=>e.currentTarget.style.background=`${t.accent}15`}>
+              <span style={{ fontSize:'14px' }}>{curLevel.badge}</span>
+              <span style={{ fontSize:'12px', fontWeight:700, color:t.accent }}>{(userStats.totalXP||0).toLocaleString()} XP</span>
+            </button>
+          )}
             </div>
           )}
 
@@ -879,7 +876,7 @@ export default function ZephyrPage() {
             </div>
           ) : (
             <div style={{ display:'grid', gridTemplateColumns:viewMode==='list'?'1fr':'repeat(auto-fill,minmax(280px,1fr))', gap:'16px' }}>
-              {displayed.map(listing => {
+              {displayed.map((listing, cardIndex) => {
                 const isHovered    = hoveredCard===listing.id
                 const isSaved_     = saved.includes(listing.id)
                 const isNew        = listing.daysOnMarket<=2
@@ -897,6 +894,7 @@ export default function ZephyrPage() {
 
                 return (
                   <div key={listing.id}
+                    {...(cardIndex === 0 ? { 'data-tour': 'listing-card' } : {})}
                     onMouseEnter={()=>setHoveredCard(listing.id)}
                     onMouseLeave={()=>setHoveredCard(null)}
                     style={{ background:cardBg, borderRadius:cardRadius, overflow:'hidden', border:cardBorder, cursor:'pointer', transition:'all 0.25s', boxShadow:cardShadow, transform:isHovered?'translateY(-3px)':'none', display:viewMode==='list'?'flex':'block' }}>
@@ -952,10 +950,18 @@ export default function ZephyrPage() {
                           <span style={{ display:'flex', alignItems:'center', gap:'3px', fontSize:'10px', color:c.textFaint }}>
                             <Clock size={10} />{listing.daysOnMarket===0?'Just listed':`${listing.daysOnMarket}d`}
                           </span>
-                          {anyFeatureOn && (
+                       {anyFeatureOn && (
                             <button
+                              {...(cardIndex === 0 ? { 'data-tour': 'ai-button' } : {})}
                               onClick={e=>{ e.stopPropagation(); setFeatureListing(listing); grantXP('VIEW_LISTING') }}
                               style={{ display:'flex', alignItems:'center', gap:'5px', padding:'4px 10px', borderRadius:'20px', border:`1.5px solid ${t.accent}`, background:t.gradient, cursor:'pointer', fontSize:'11px', fontWeight:800, color:'#fff', boxShadow:`0 0 10px ${t.accentGlow},0 2px 8px rgba(0,0,0,0.2)`, animation:'aiPulse 2.2s ease-in-out infinite', transition:'all 0.2s', flexShrink:0 }}
+                              onMouseEnter={e=>{ e.currentTarget.style.transform='scale(1.08)'; e.currentTarget.style.boxShadow=`0 0 18px ${t.accentGlow},0 4px 12px rgba(0,0,0,0.3)`; e.currentTarget.style.animation='none' }}
+                              onMouseLeave={e=>{ e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow=`0 0 10px ${t.accentGlow},0 2px 8px rgba(0,0,0,0.2)`; e.currentTarget.style.animation='aiPulse 2.2s ease-in-out infinite' }}
+                              title="Open AI Features for this listing">
+                              <Zap size={11} style={{ filter:'drop-shadow(0 0 3px rgba(255,255,255,0.8))' }} />
+                              AI Insights
+                            </button>
+                          )}
                               onMouseEnter={e=>{ e.currentTarget.style.transform='scale(1.08)'; e.currentTarget.style.boxShadow=`0 0 18px ${t.accentGlow},0 4px 12px rgba(0,0,0,0.3)`; e.currentTarget.style.animation='none' }}
                               onMouseLeave={e=>{ e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow=`0 0 10px ${t.accentGlow},0 2px 8px rgba(0,0,0,0.2)`; e.currentTarget.style.animation='aiPulse 2.2s ease-in-out infinite' }}
                               title="Open AI Features for this listing">
