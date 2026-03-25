@@ -347,10 +347,38 @@ export default function ZephyrPage() {
     setApiCreds(creds)
     setAccordionOpen(false)
     setLoading(true)
-    fetch(`/api/listings?query=${encodeURIComponent(query)}`)
+
+    const params = new URLSearchParams({
+      query:     query,
+      apiKey:    creds.apiKey    || '',
+      apiSecret: creds.apiSecret || '',
+      mode:      creds.mode      || 'replication',
+      limit:     '50',
+    })
+
+    fetch(`/api/listings?${params.toString()}`)
       .then(r => r.json())
-      .then(d => { setListings(d.listings?.length > 0 ? d.listings : DEMO_LISTINGS); setLoading(false) })
-      .catch(() => { setListings(DEMO_LISTINGS); setLoading(false) })
+      .then(data => {
+        console.log('[ZephyrAI] Spark API response:', data.source, data.count, data.message)
+
+        if (data.success && data.listings?.length > 0) {
+          setListings(data.listings)
+          console.log(`[ZephyrAI] Loaded ${data.listings.length} live listings from Spark ${data.mode}`)
+        } else {
+          // Keep demo listings but show a console warning
+          setListings(DEMO_LISTINGS)
+          console.warn('[ZephyrAI] Falling back to demo listings:', data.message || 'No listings returned')
+          if (data.source === 'auth_error') {
+            alert(`Spark API authentication failed.\n\n${data.message}\n\nShowing demo listings instead.`)
+          }
+        }
+        setLoading(false)
+      })
+      .catch(err => {
+        console.error('[ZephyrAI] API fetch error:', err)
+        setListings(DEMO_LISTINGS)
+        setLoading(false)
+      })
   }, [query])
 
   const handleSignIn  = (u) => { setUser(u); grantXP('DAILY_LOGIN') }
