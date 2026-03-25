@@ -283,9 +283,6 @@ const accordionSections = user ? [
 backgroundImage: activeLayout.vars?.['--scanline'] || 'none',
         }} />
 
-        
-      </div> 
-
       {gamificationEnabled && <XPToast toasts={toasts} />}
 
       {newAchievement && (
