@@ -32,6 +32,221 @@ function saveStats(s)   { try { localStorage.setItem(LS_KEY,  JSON.stringify(s))
 function loadFeat()     { try { return JSON.parse(localStorage.getItem(FS_KEY))  || DEFAULT_FEATURE_SETTINGS } catch { return DEFAULT_FEATURE_SETTINGS } }
 function saveFeat(s)    { try { localStorage.setItem(FS_KEY,  JSON.stringify(s)) } catch {} }
 
+// ── More Filters Modal ────────────────────────────────────────────────────────
+function MoreFiltersModal({ c, t, filters, setFilters, listings, onClose }) {
+  const all = listings || []
+
+  // Count matching listings live
+  const matchCount = all.filter(l => {
+    if (filters.minBaths    && l.baths < parseFloat(filters.minBaths))                   return false
+    if (filters.minSqft     && l.sqft  < parseInt(filters.minSqft))                      return false
+    if (filters.maxSqft     && l.sqft  > parseInt(filters.maxSqft))                      return false
+    if (filters.yearBuiltMin && (l.yearBuilt||0) < parseInt(filters.yearBuiltMin))        return false
+    if (filters.yearBuiltMax && (l.yearBuilt||0) > parseInt(filters.yearBuiltMax))        return false
+    if (filters.maxDom      && l.daysOnMarket > parseInt(filters.maxDom))                return false
+    if (filters.status      && l.status !== filters.status)                               return false
+    if (filters.hasPool     && !l.description?.toLowerCase().includes('pool'))            return false
+    if (filters.hasGarage   && !l.description?.toLowerCase().includes('garage'))          return false
+    if (filters.maxHOA      && parseInt(filters.maxHOA) > 0)                             return false
+    return true
+  }).length
+
+  const set = (key, val) => setFilters(p => ({ ...p, [key]: val }))
+
+  const Label = ({ children }) => (
+    <p style={{ fontSize:'11px', fontWeight:700, color:c.textMuted, textTransform:'uppercase', letterSpacing:'1px', marginBottom:'8px', margin:'0 0 8px' }}>{children}</p>
+  )
+
+  const Row = ({ children, last }) => (
+    <div style={{ paddingBottom: last ? 0 : '18px', marginBottom: last ? 0 : '18px', borderBottom: last ? 'none' : `1px solid ${c.border}` }}>
+      {children}
+    </div>
+  )
+
+  const inp = (key, placeholder, type='text') => (
+    <input
+      type={type}
+      placeholder={placeholder}
+      value={filters[key] || ''}
+      onChange={e => set(key, e.target.value)}
+      style={{ flex:1, padding:'9px 12px', border:`1px solid ${c.border}`, borderRadius:'8px', fontSize:'13px', background:c.inputBg, color:c.text, outline:'none', minWidth:0 }}
+      onFocus={e => e.target.style.borderColor = t.accent}
+      onBlur={e  => e.target.style.borderColor = c.border}
+    />
+  )
+
+  const ToggleChip = ({ label, field }) => {
+    const on = !!filters[field]
+    return (
+      <button onClick={() => set(field, on ? '' : '1')}
+        style={{ padding:'7px 14px', borderRadius:'20px', border:`1px solid ${on ? t.accent : c.border}`, background:on ? `${t.accent}20` : 'transparent', color:on ? t.accent : c.textMuted, cursor:'pointer', fontSize:'12px', fontWeight:600, transition:'all 0.2s' }}>
+        {on ? '✓ ' : ''}{label}
+      </button>
+    )
+  }
+
+  const statusOptions = ['Active', 'Pending', 'Coming Soon', 'Active Under Contract']
+
+  return (
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.7)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:9996, backdropFilter:'blur(6px)', padding:'16px' }}
+      onClick={onClose}>
+      <div onClick={e => e.stopPropagation()}
+        style={{ background:c.surface, border:`1px solid ${c.border}`, borderRadius:'20px', width:'100%', maxWidth:'520px', maxHeight:'88vh', display:'flex', flexDirection:'column', overflow:'hidden', boxShadow:`0 40px 100px rgba(0,0,0,0.5),0 0 0 1px ${t.accent}20` }}>
+
+        {/* Header */}
+        <div style={{ padding:'18px 20px', borderBottom:`1px solid ${c.border}`, display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
+          <div>
+            <p style={{ fontWeight:900, fontSize:'17px', color:c.text, margin:0 }}>More Filters</p>
+            <p style={{ fontSize:'12px', color:c.textMuted, margin:'2px 0 0' }}>Refine your search with additional criteria</p>
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
+            {/* Live count badge */}
+            <div style={{ padding:'6px 14px', borderRadius:'20px', background:`${t.accent}15`, border:`1px solid ${t.accent}40` }}>
+              <span style={{ fontSize:'13px', fontWeight:800, color:t.accent }}>{matchCount} matching</span>
+            </div>
+            <button onClick={onClose}
+              style={{ width:'32px', height:'32px', borderRadius:'8px', border:`1px solid ${c.border}`, background:c.surfaceAlt, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:c.textMuted, fontSize:'16px' }}>✕</button>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div style={{ flex:1, overflowY:'auto', padding:'20px' }}>
+
+          {/* Bathrooms */}
+          <Row>
+            <Label>Minimum Bathrooms</Label>
+            <div style={{ display:'flex', gap:'8px', flexWrap:'wrap' }}>
+              {['Any','1','1.5','2','2.5','3','4+'].map(b => {
+                const val = b === 'Any' ? '' : b.replace('+','')
+                const on  = (filters.minBaths||'') === val
+                return (
+                  <button key={b} onClick={() => set('minBaths', on ? '' : val)}
+                    style={{ padding:'7px 14px', borderRadius:'8px', border:`1px solid ${on ? t.accent : c.border}`, background:on ? t.accent : 'transparent', color:on ? '#fff' : c.text, cursor:'pointer', fontSize:'13px', fontWeight:600, transition:'all 0.15s' }}>
+                    {b}
+                  </button>
+                )
+              })}
+            </div>
+          </Row>
+
+          {/* Square Footage */}
+          <Row>
+            <Label>Square Footage</Label>
+            <div style={{ display:'flex', gap:'10px', alignItems:'center' }}>
+              {inp('minSqft', 'Min sqft', 'number')}
+              <span style={{ color:c.textFaint, fontSize:'13px', flexShrink:0 }}>to</span>
+              {inp('maxSqft', 'Max sqft', 'number')}
+            </div>
+          </Row>
+
+          {/* Year Built */}
+          <Row>
+            <Label>Year Built</Label>
+            <div style={{ display:'flex', gap:'10px', alignItems:'center' }}>
+              {inp('yearBuiltMin', 'From year', 'number')}
+              <span style={{ color:c.textFaint, fontSize:'13px', flexShrink:0 }}>to</span>
+              {inp('yearBuiltMax', 'To year', 'number')}
+            </div>
+          </Row>
+
+          {/* Days on Market */}
+          <Row>
+            <Label>Max Days on Market</Label>
+            <div style={{ display:'flex', gap:'8px', flexWrap:'wrap' }}>
+              {[['Any',''],['1 day','1'],['7 days','7'],['14 days','14'],['30 days','30'],['60 days','60'],['90+ days','90']].map(([label, val]) => {
+                const on = (filters.maxDom||'') === val
+                return (
+                  <button key={label} onClick={() => set('maxDom', on ? '' : val)}
+                    style={{ padding:'7px 14px', borderRadius:'8px', border:`1px solid ${on ? t.accent : c.border}`, background:on ? t.accent : 'transparent', color:on ? '#fff' : c.text, cursor:'pointer', fontSize:'12px', fontWeight:600, transition:'all 0.15s' }}>
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
+          </Row>
+
+          {/* Listing Status */}
+          <Row>
+            <Label>Listing Status</Label>
+            <div style={{ display:'flex', gap:'8px', flexWrap:'wrap' }}>
+              <button onClick={() => set('status', '')}
+                style={{ padding:'7px 14px', borderRadius:'8px', border:`1px solid ${!filters.status ? t.accent : c.border}`, background:!filters.status ? t.accent : 'transparent', color:!filters.status ? '#fff' : c.text, cursor:'pointer', fontSize:'12px', fontWeight:600, transition:'all 0.15s' }}>
+                Any
+              </button>
+              {statusOptions.map(s => {
+                const on = filters.status === s
+                return (
+                  <button key={s} onClick={() => set('status', on ? '' : s)}
+                    style={{ padding:'7px 14px', borderRadius:'8px', border:`1px solid ${on ? t.accent : c.border}`, background:on ? t.accent : 'transparent', color:on ? '#fff' : c.text, cursor:'pointer', fontSize:'12px', fontWeight:600, transition:'all 0.15s' }}>
+                    {s}
+                  </button>
+                )
+              })}
+            </div>
+          </Row>
+
+          {/* Features */}
+          <Row>
+            <Label>Must-Have Features</Label>
+            <div style={{ display:'flex', gap:'8px', flexWrap:'wrap' }}>
+              <ToggleChip label="🏊 Pool"    field="hasPool"   />
+              <ToggleChip label="🚗 Garage"  field="hasGarage" />
+              <ToggleChip label="🏡 Yard"    field="hasYard"   />
+              <ToggleChip label="🛗 Basement"field="hasBasement"/>
+              <ToggleChip label="🔥 Fireplace"field="hasFireplace"/>
+            </div>
+          </Row>
+
+          {/* Lot Size */}
+          <Row>
+            <Label>Minimum Lot Size</Label>
+            <div style={{ display:'flex', gap:'8px', flexWrap:'wrap' }}>
+              {[['Any',''],['0.1 ac','0.1'],['0.25 ac','0.25'],['0.5 ac','0.5'],['1 ac','1'],['2+ ac','2']].map(([label, val]) => {
+                const on = (filters.minLot||'') === val
+                return (
+                  <button key={label} onClick={() => set('minLot', on ? '' : val)}
+                    style={{ padding:'7px 14px', borderRadius:'8px', border:`1px solid ${on ? t.accent : c.border}`, background:on ? t.accent : 'transparent', color:on ? '#fff' : c.text, cursor:'pointer', fontSize:'12px', fontWeight:600, transition:'all 0.15s' }}>
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
+          </Row>
+
+          {/* Keywords */}
+          <Row last>
+            <Label>Keywords in Description</Label>
+            <input
+              type="text"
+              placeholder='e.g. "corner lot", "updated kitchen", "cul-de-sac"'
+              value={filters.keywords || ''}
+              onChange={e => set('keywords', e.target.value)}
+              style={{ width:'100%', padding:'10px 12px', border:`1px solid ${c.border}`, borderRadius:'8px', fontSize:'13px', background:c.inputBg, color:c.text, outline:'none', boxSizing:'border-box' }}
+              onFocus={e => e.target.style.borderColor = t.accent}
+              onBlur={e  => e.target.style.borderColor = c.border}
+            />
+          </Row>
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding:'16px 20px', borderTop:`1px solid ${c.border}`, display:'flex', gap:'10px', flexShrink:0 }}>
+          <button
+            onClick={() => setFilters({})}
+            style={{ flex:1, padding:'11px', borderRadius:'10px', border:`1px solid ${c.border}`, background:'transparent', color:c.textMuted, cursor:'pointer', fontSize:'13px', fontWeight:700, transition:'all 0.2s' }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor='#ef4444'; e.currentTarget.style.color='#ef4444' }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor=c.border; e.currentTarget.style.color=c.textMuted }}>
+            Clear All
+          </button>
+          <button
+            onClick={onClose}
+            style={{ flex:2, padding:'11px', borderRadius:'10px', border:'none', background:t.gradient, color:'#fff', cursor:'pointer', fontSize:'13px', fontWeight:800, boxShadow:`0 4px 16px ${t.accentGlow}` }}>
+            Show {matchCount} Results
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 let toastId = 0
 
 export default function ZephyrPage() {
