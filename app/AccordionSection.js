@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { ChevronDown, Check } from 'lucide-react'
 import FeatureSettings from './FeatureSettings'
+import { LAYOUTS } from './layouts'
 
 export default function AccordionSection({
   section, c, t,
@@ -15,7 +16,10 @@ export default function AccordionSection({
   onOpenGamification,
   userStats,
   featureSettings, setFeatureSettings,
+  onOpenHelp,
+  activeLayoutId, setActiveLayoutId,
 }) {
+
   const [open,      setOpen]      = useState(false)
   const [apiKey,    setApiKey]    = useState('')
   const [apiSecret, setApiSecret] = useState('')
