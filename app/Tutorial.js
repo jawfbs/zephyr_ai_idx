@@ -1,514 +1,401 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 
+// ── Step definitions ──────────────────────────────────────────────────────────
+// target: CSS selector of the real element to highlight
+// position: where the tooltip appears relative to the element
 const STEPS = [
   {
-    id: 'welcome',
-    title: 'Welcome to ZephyrAI IDX 👋',
-    emoji: '🏠',
-    description: 'The smartest real estate platform in the Fargo area. Let\'s take a quick tour so you can find your perfect home faster.',
-    type: 'splash',
-    highlight: null,
+    id:          'welcome',
+    title:       'Welcome to ZephyrAI IDX 👋',
+    description: 'The smartest AI-powered real estate platform in the Fargo area. This quick tour will show you everything — click Next or press → to continue.',
+    target:      null,
+    position:    'center',
+    spotlight:   false,
   },
   {
-    id: 'search',
-    title: 'Search Any Way You Want',
-    emoji: '🔍',
-    description: 'Type a city, zip code, address, or MLS number. Try searching "West Fargo" or "58078" to filter instantly.',
-    type: 'highlight',
-    highlight: 'search',
-    tip: 'Pro tip: Search by neighborhood name or school district too',
-    interactive: 'Try clicking the search bar →',
+    id:          'search',
+    title:       '🔍 Search Any Way You Want',
+    description: 'Type a city name, zip code, address, or MLS number here. Try "West Fargo" or "58078" to filter instantly. Press Enter or click Search.',
+    target:      'input[placeholder*="City, Zip"]',
+    position:    'bottom',
+    spotlight:   true,
+    pulse:       true,
   },
   {
-    id: 'filters',
-    title: 'Smart Filters',
-    emoji: '🎯',
-    description: 'Filter by price range, bedrooms, home type, and sort order. Combine multiple filters to narrow down exactly what you need.',
-    type: 'highlight',
-    highlight: 'filters',
-    tip: 'Each filter you use earns XP in the gamification system',
-    interactive: 'Click Price or Beds to see filter options →',
+    id:          'filters',
+    title:       '🎯 Smart Filter Bar',
+    description: 'Filter by Price, Beds, Home Type, and Sort order. Click "More" to access advanced filters like square footage, year built, lot size, and keywords.',
+    target:      '[data-tour="filters"]',
+    position:    'bottom',
+    spotlight:   true,
   },
   {
-    id: 'views',
-    title: 'Three Ways to Browse',
-    emoji: '🗺️',
-    description: 'Switch between Grid, List, and Split Map view. The map view shows all listings as pins — click any pin to see details.',
-    type: 'highlight',
-    highlight: 'views',
-    tip: 'Split view lets you browse listings and the map side-by-side',
-    interactive: 'Try the view toggle buttons →',
-    demo: [
-      { icon: '⊞', label: 'Grid — Photo cards in a responsive grid' },
-      { icon: '≡', label: 'List — Compact rows with photos' },
-      { icon: '⊙', label: 'Split — Listings + live map together' },
-    ],
+    id:          'view_toggle',
+    title:       '🗺️ Three Ways to Browse',
+    description: 'Switch between Grid, List, and Split Map view. Split view shows listings alongside a live interactive map with 8 different map layers.',
+    target:      '[data-tour="view-toggle"]',
+    position:    'bottom',
+    spotlight:   true,
+    pulse:       true,
   },
   {
-    id: 'cards',
-    title: 'Listing Cards',
-    emoji: '🏡',
-    description: 'Every card shows 8 photos you can cycle through using the arrow buttons. Exterior, living room, kitchen, bedrooms, game room, pool, and drone view.',
-    type: 'demo',
-    highlight: null,
-    tip: 'Click a card to open the full listing modal with all details',
-    demo: [
-      { icon: '‹›', label: 'Arrow buttons cycle through all 8 room photos' },
-      { icon: '❤️', label: 'Save listings to your favorites (sign in required)' },
-      { icon: '📤', label: 'Share any listing with a friend' },
-      { icon: '🚫', label: 'Hide listings you\'re not interested in' },
-      { icon: '⚡ AI', label: 'Open AI Features panel for that listing' },
-    ],
+    id:          'listing_card',
+    title:       '🏡 Listing Cards',
+    description: 'Each card shows 8 photos — use the ‹ › arrows to cycle through Exterior, Living Room, Kitchen, Bedrooms, Game Room, Pool, and Drone views.',
+    target:      '[data-tour="listing-card"]',
+    position:    'right',
+    spotlight:   true,
   },
   {
-    id: 'modal',
-    title: 'Full Listing View',
-    emoji: '🔎',
-    description: 'Click any listing to open the full details modal. Four tabs give you everything you need.',
-    type: 'demo',
-    highlight: null,
-    tip: 'The Neighborhood tab loads live weather, air quality, walk scores, and school data',
-    demo: [
-      { icon: '🏠', label: 'Details — Beds, baths, sqft, year built, description' },
-      { icon: '🌆', label: 'Neighborhood — Live weather, walk score, crime, schools' },
-      { icon: '💰', label: 'Mortgage — Interactive payment calculator with sliders' },
-      { icon: '📞', label: 'Agent — Contact options and tour scheduling' },
-    ],
+    id:          'ai_button',
+    title:       '⚡ AI Insights — 30 Tools',
+    description: 'This glowing button opens 30 AI-powered analysis tools for any listing — Savage Roast, Hidden Gem Radar, Vibe Match, Negotiate, Climate, ESG, CMA, and much more.',
+    target:      '[data-tour="ai-button"]',
+    position:    'top',
+    spotlight:   true,
+    pulse:       true,
   },
   {
-    id: 'ai_features',
-    title: '🤖 AI-Powered Features',
-    emoji: '✨',
-    description: 'Click the ⚡ AI button on any listing card to unlock 12 unique AI analysis tools — all free, no API key needed.',
-    type: 'demo',
-    highlight: null,
-    tip: 'You can enable or disable individual features under Settings → AI Features',
-    demo: [
-      { icon: '🔥', label: 'Savage Roast — Brutally honest listing teardown' },
-      { icon: '💎', label: 'Hidden Gem Radar — AI value signal analysis' },
-      { icon: '🎰', label: 'Vibe Roulette — Spin for a personality-matched listing' },
-      { icon: '💝', label: 'Emotional Fit Quiz — 5 questions → personalized match story' },
-      { icon: '👻', label: 'Ghost of Homes Past — AI-dramatized home history' },
-      { icon: '🎯', label: 'Regret Minimizer — Negotiation path simulator' },
-      { icon: '🌀', label: 'Parallel Lives — See your future in this home' },
-      { icon: '📊', label: 'Market Intelligence — Real-time comp analysis' },
-      { icon: '🔧', label: 'Maintenance Forecast — 5-year cost projection' },
-      { icon: '🔨', label: 'Renovation Blender — Describe idea → cost + ROI' },
-      { icon: '🌡️', label: 'Climate Fortune — 30-year climate projection' },
-      { icon: '📋', label: 'Due Diligence — Risk flags + pre-offer checklist' },
-    ],
+    id:          'homes_count',
+    title:       '✨ Live Listing Count',
+    description: 'This badge updates in real time as you apply filters, showing exactly how many homes match your current criteria.',
+    target:      '[data-tour="homes-count"]',
+    position:    'bottom',
+    spotlight:   true,
   },
   {
-    id: 'map_layers',
-    title: 'Map Layers',
-    emoji: '🗺️',
-    description: 'In Split or Map view, click the 🌐 Layers button to switch between 8 different map styles.',
-    type: 'demo',
-    highlight: null,
-    tip: 'Satellite view is great for checking lot size and surroundings',
-    demo: [
-      { icon: '🗺️', label: 'Street — Standard OpenStreetMap' },
-      { icon: '🛰️', label: 'Satellite — Esri aerial imagery' },
-      { icon: '⛰️', label: 'Topo — Topographic elevation map' },
-      { icon: '🚌', label: 'Transit — Public transport routes' },
-      { icon: '🌑', label: 'Dark — CARTO dark theme' },
-      { icon: '☀️', label: 'Light — CARTO light theme' },
-      { icon: '🎨', label: 'Artistic — Stamen watercolor style' },
-      { icon: '🚴', label: 'Cycle — CyclOSM bike routes' },
-    ],
+    id:          'header_xp',
+    title:       '🎮 Gamification — Earn XP',
+    description: 'Sign in to earn XP as you explore. View listings, save favorites, use filters, share homes, and contact agents to level up from House Hunter to Market Legend.',
+    target:      '[data-tour="xp-badge"]',
+    position:    'bottom',
+    spotlight:   true,
   },
   {
-    id: 'neighborhood',
-    title: 'Neighborhood Data',
-    emoji: '📊',
-    description: 'Open any listing → Neighborhood tab to get live data from real public APIs — all free, no signup required.',
-    type: 'demo',
-    highlight: null,
-    demo: [
-      { icon: '🚶', label: 'Walk Score, Transit Score, Bike Score' },
-      { icon: '🌤️', label: 'Live weather + 5-day forecast (Open-Meteo)' },
-      { icon: '💨', label: 'Air quality index + PM2.5 / PM10 levels' },
-      { icon: '🔒', label: 'Safety index with property + violent crime breakdown' },
-      { icon: '🏫', label: 'Nearby schools via OpenStreetMap Overpass API' },
-      { icon: '📈', label: 'Demographics: median income, density, ownership rate' },
-    ],
+    id:          'mode_toggle',
+    title:       '🌗 Color Mode',
+    description: 'Toggle between Light, Mellow, and Dark mode. Your preference is saved in cookies so it persists across visits.',
+    target:      '[data-tour="mode-toggle"]',
+    position:    'bottom',
+    spotlight:   true,
+    pulse:       true,
   },
   {
-    id: 'gamification',
-    title: 'Earn XP as You Explore 🎮',
-    emoji: '🏆',
-    description: 'ZephyrAI rewards you for using the platform. Sign in to start earning XP and unlocking achievements.',
-    type: 'demo',
-    highlight: null,
-    tip: 'Sign in to save progress — XP is stored in your account',
-    demo: [
-      { icon: '👁️ +5',  label: 'View a listing' },
-      { icon: '❤️ +10', label: 'Save a listing' },
-      { icon: '🔍 +3',  label: 'Search the map' },
-      { icon: '🎯 +5',  label: 'Use a filter' },
-      { icon: '🗺️ +8',  label: 'Open map view' },
-      { icon: '📤 +15', label: 'Share a listing' },
-      { icon: '📞 +20', label: 'Contact an agent' },
-      { icon: '📅 +10', label: 'Daily login bonus' },
-    ],
+    id:          'settings_menu',
+    title:       '⚙️ Settings & Account',
+    description: 'Click this menu to access your account, notifications, appearance themes, gamification, all 30 AI feature toggles, help, integrations, and privacy settings.',
+    target:      '[data-tour="settings-btn"]',
+    position:    'bottom-left',
+    spotlight:   true,
+    pulse:       true,
   },
   {
-    id: 'settings',
-    title: 'Personalize Everything',
-    emoji: '⚙️',
-    description: 'Click the menu icon (top right) to access all settings after signing in.',
-    type: 'demo',
-    highlight: null,
-    tip: 'Your theme and color mode preferences are saved automatically',
-    demo: [
-      { icon: '🎨', label: 'Appearance — 16 themes across 4 categories + 3 color modes' },
-      { icon: '🎮', label: 'Gamification — Enable/disable XP system' },
-      { icon: '🤖', label: 'AI Features — Toggle each of the 12 AI tools on/off' },
-      { icon: '🔔', label: 'Notifications — Email, browser push, price drops' },
-      { icon: '🔌', label: 'Integrations — Connect SparkAPI for live MLS data (Pro)' },
-      { icon: '🔒', label: 'Privacy — Analytics, cookies, data sharing controls' },
-    ],
+    id:          'neighborhood',
+    title:       '🌆 Neighborhood Data',
+    description: 'Click any listing → open the Neighborhood tab to get live weather, air quality, Walk Score, crime index, nearby schools, and demographic data — all free.',
+    target:      '[data-tour="listing-card"]',
+    position:    'right',
+    spotlight:   true,
   },
   {
-    id: 'signin',
-    title: 'Get the Full Experience',
-    emoji: '🔑',
-    description: 'Create a free account to unlock saving, AI features, gamification, and personalized settings. No credit card needed.',
-    type: 'cta',
-    highlight: null,
-    demo: [
-      { icon: '🔑', label: 'Homebuyer — Save listings, track favorites, get alerts' },
-      { icon: '🏡', label: 'Agent — SparkAPI, client tools, marketing features' },
-      { icon: '👥', label: 'Team — Multi-agent dashboard, shared searches' },
-      { icon: '🏢', label: 'Brokerage — Full platform, custom branding, API access' },
-    ],
+    id:          'mortgage',
+    title:       '💰 Mortgage Calculator',
+    description: 'Every listing has a built-in mortgage calculator. Adjust down payment, interest rate, and loan term with sliders to see your monthly payment instantly.',
+    target:      '[data-tour="listing-card"]',
+    position:    'right',
+    spotlight:   true,
+  },
+  {
+    id:          'finish',
+    title:       '🎉 You\'re Ready!',
+    description: 'That covers the main features. Sign in to unlock saving, AI insights, gamification, and personalized settings. Happy house hunting!',
+    target:      null,
+    position:    'center',
+    spotlight:   false,
   },
 ]
 
+// ── Tooltip position calculator ───────────────────────────────────────────────
+function calcTooltipStyle(rect, position, tooltipW = 320, tooltipH = 180) {
+  if (!rect) return { top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }
+
+  const pad    = 16
+  const arrH   = 10
+  const vw     = window.innerWidth
+  const vh     = window.innerHeight
+
+  let top, left, transform = ''
+
+  switch (position) {
+    case 'bottom':
+      top  = rect.bottom + arrH + pad
+      left = rect.left + rect.width / 2 - tooltipW / 2
+      break
+    case 'top':
+      top  = rect.top - tooltipH - arrH - pad
+      left = rect.left + rect.width / 2 - tooltipW / 2
+      break
+    case 'right':
+      top  = rect.top + rect.height / 2 - tooltipH / 2
+      left = rect.right + arrH + pad
+      break
+    case 'left':
+      top  = rect.top + rect.height / 2 - tooltipH / 2
+      left = rect.left - tooltipW - arrH - pad
+      break
+    case 'bottom-left':
+      top  = rect.bottom + arrH + pad
+      left = rect.right - tooltipW
+      break
+    default:
+      return { top:'50%', left:'50%', transform:'translate(-50%,-50%)', position:'fixed' }
+  }
+
+  // Clamp to viewport
+  left = Math.max(pad, Math.min(left, vw - tooltipW - pad))
+  top  = Math.max(pad, Math.min(top,  vh - tooltipH - pad))
+
+  return { top:`${top}px`, left:`${left}px`, position:'fixed' }
+}
+
+// ── Arrow direction ───────────────────────────────────────────────────────────
+function arrowFor(position) {
+  return { bottom:'top', top:'bottom', right:'left', left:'right', 'bottom-left':'top' }[position] || null
+}
+
+// ── Main Tutorial component ───────────────────────────────────────────────────
 export default function Tutorial({ c, t, onClose, onSignIn }) {
-  const [step,    setStep]    = useState(0)
-  const [skipNext,setSkipNext]= useState(false)
-  const [leaving, setLeaving] = useState(false)
+  const [step,        setStep]        = useState(0)
+  const [rect,        setRect]        = useState(null)
+  const [skipNext,    setSkipNext]    = useState(false)
+  const [leaving,     setLeaving]     = useState(false)
+  const [tooltipSize, setTooltipSize] = useState({ w:320, h:200 })
+  const tooltipRef = useRef(null)
+  const rafRef     = useRef(null)
 
   const current  = STEPS[step]
   const isFirst  = step === 0
   const isLast   = step === STEPS.length - 1
-  const progress = ((step) / (STEPS.length - 1)) * 100
+  const progress = Math.round((step / (STEPS.length - 1)) * 100)
+
+  // ── Measure target element ────────────────────────────────────────────────
+  const measureTarget = useCallback(() => {
+    if (!current?.target) { setRect(null); return }
+    const el = document.querySelector(current.target)
+    if (!el) { setRect(null); return }
+    const r = el.getBoundingClientRect()
+    setRect({ top:r.top, left:r.left, width:r.width, height:r.height, bottom:r.bottom, right:r.right })
+  }, [current?.target])
+
+  useEffect(() => {
+    measureTarget()
+    // Re-measure on scroll/resize
+    const onUpdate = () => { cancelAnimationFrame(rafRef.current); rafRef.current = requestAnimationFrame(measureTarget) }
+    window.addEventListener('scroll', onUpdate, true)
+    window.addEventListener('resize', onUpdate)
+    return () => {
+      window.removeEventListener('scroll', onUpdate, true)
+      window.removeEventListener('resize', onUpdate)
+      cancelAnimationFrame(rafRef.current)
+    }
+  }, [measureTarget])
+
+  // Measure tooltip height after render
+  useEffect(() => {
+    if (tooltipRef.current) {
+      const r = tooltipRef.current.getBoundingClientRect()
+      setTooltipSize({ w: r.width || 320, h: r.height || 200 })
+    }
+  })
+
+  // Scroll target into view
+  useEffect(() => {
+    if (!current?.target) return
+    const el = document.querySelector(current.target)
+    if (el) el.scrollIntoView({ behavior:'smooth', block:'center', inline:'center' })
+  }, [step, current?.target])
+
+  // Keyboard nav
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'Enter') handleNext()
+      if (e.key === 'ArrowLeft')                       handlePrev()
+      if (e.key === 'Escape')                          handleClose()
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  })
 
   const handleClose = () => {
     if (skipNext) document.cookie = 'zephyr_skip_tutorial=1; max-age=31536000; path=/'
     setLeaving(true)
-    setTimeout(() => onClose(), 300)
+    setTimeout(() => onClose(), 280)
   }
 
-  const handleNext = () => {
-    if (isLast) { handleClose(); return }
-    setStep(s => s + 1)
-  }
+  const handleNext = () => { if (isLast) handleClose(); else setStep(s => s + 1) }
+  const handlePrev = () => { if (!isFirst) setStep(s => s - 1) }
 
-  const handlePrev = () => {
-    if (step > 0) setStep(s => s - 1)
-  }
+  // Spotlight padding
+  const PAD = 10
 
-  const handleDotClick = (i) => setStep(i)
+  // Spotlight rect with padding
+  const sRect = rect ? {
+    top:    rect.top    - PAD,
+    left:   rect.left   - PAD,
+    width:  rect.width  + PAD * 2,
+    height: rect.height + PAD * 2,
+  } : null
+
+  const tooltipStyle  = calcTooltipStyle(rect, current.position, tooltipSize.w, tooltipSize.h)
+  const arrowDir      = rect ? arrowFor(current.position) : null
+
+  const arrowStyles = {
+    top:    { bottom:'100%', left:'50%', transform:'translateX(-50%)', borderWidth:'0 8px 8px', borderColor:`transparent transparent rgba(20,20,35,0.98) transparent` },
+    bottom: { top:'100%',   left:'50%', transform:'translateX(-50%)', borderWidth:'8px 8px 0',  borderColor:`rgba(20,20,35,0.98) transparent transparent transparent` },
+    left:   { right:'100%', top:'50%',  transform:'translateY(-50%)',  borderWidth:'8px 8px 8px 0', borderColor:`transparent rgba(20,20,35,0.98) transparent transparent` },
+    right:  { left:'100%',  top:'50%',  transform:'translateY(-50%)',  borderWidth:'8px 0 8px 8px', borderColor:`transparent transparent transparent rgba(20,20,35,0.98)` },
+  }
 
   return (
-    <div
-      style={{
-        position: 'fixed', inset: 0,
-        background: 'rgba(0,0,0,0.85)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        zIndex: 99999, backdropFilter: 'blur(8px)',
-        padding: '16px',
-        opacity: leaving ? 0 : 1,
-        transition: 'opacity 0.3s ease',
-      }}
-      onClick={handleClose}
-    >
+    <div style={{ position:'fixed', inset:0, zIndex:999999, pointerEvents:'none', opacity:leaving?0:1, transition:'opacity 0.28s ease' }}>
+
+      {/* ── Overlay with spotlight cutout ── */}
+      {current.spotlight && sRect ? (
+        <>
+          {/* Top */}
+          <div style={{ position:'fixed', top:0, left:0, right:0, height:`${sRect.top}px`, background:'rgba(0,0,0,0.72)', pointerEvents:'auto' }} onClick={handleClose} />
+          {/* Bottom */}
+          <div style={{ position:'fixed', top:`${sRect.top+sRect.height}px`, left:0, right:0, bottom:0, background:'rgba(0,0,0,0.72)', pointerEvents:'auto' }} onClick={handleClose} />
+          {/* Left */}
+          <div style={{ position:'fixed', top:`${sRect.top}px`, left:0, width:`${sRect.left}px`, height:`${sRect.height}px`, background:'rgba(0,0,0,0.72)', pointerEvents:'auto' }} onClick={handleClose} />
+          {/* Right */}
+          <div style={{ position:'fixed', top:`${sRect.top}px`, left:`${sRect.left+sRect.width}px`, right:0, height:`${sRect.height}px`, background:'rgba(0,0,0,0.72)', pointerEvents:'auto' }} onClick={handleClose} />
+          {/* Spotlight border glow */}
+          <div style={{
+            position:     'fixed',
+            top:          `${sRect.top}px`,
+            left:         `${sRect.left}px`,
+            width:        `${sRect.width}px`,
+            height:       `${sRect.height}px`,
+            borderRadius: '10px',
+            border:       `2px solid ${t.accent}`,
+            boxShadow:    `0 0 0 3px ${t.accentGlow}, 0 0 30px ${t.accentGlow}`,
+            pointerEvents:'none',
+            animation:    current.pulse ? 'tourPulse 1.8s ease-in-out infinite' : 'none',
+          }} />
+        </>
+      ) : (
+        /* Full dark overlay for non-spotlight steps */
+        !current.spotlight && (
+          <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.72)', pointerEvents:'auto', backdropFilter:'blur(3px)' }} onClick={handleClose} />
+        )
+      )}
+
+      {/* ── Tooltip ── */}
       <div
+        ref={tooltipRef}
         onClick={e => e.stopPropagation()}
         style={{
-          background: 'linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #0f0f1a 100%)',
-          border: `1px solid ${t.accent}50`,
-          borderRadius: '24px',
-          width: '100%', maxWidth: '620px',
-          maxHeight: '88vh',
-          display: 'flex', flexDirection: 'column',
-          overflow: 'hidden',
-          boxShadow: `0 40px 120px rgba(0,0,0,0.8), 0 0 0 1px ${t.accent}20, 0 0 60px ${t.accentGlow}`,
-          animation: 'tutorialIn 0.4s cubic-bezier(.34,1.56,.64,1)',
+          ...tooltipStyle,
+          width:         '320px',
+          pointerEvents: 'auto',
+          background:    'rgba(12,12,22,0.98)',
+          border:        `1px solid ${t.accent}60`,
+          borderRadius:  '16px',
+          boxShadow:     `0 24px 64px rgba(0,0,0,0.7), 0 0 0 1px ${t.accent}20, 0 0 40px ${t.accentGlow}`,
+          overflow:      'hidden',
+          animation:     'tourSlideIn 0.25s cubic-bezier(.34,1.56,.64,1)',
         }}
       >
-        {/* ── Progress bar ── */}
-        <div style={{ height: '3px', background: 'rgba(255,255,255,0.08)', flexShrink: 0 }}>
+        {/* Arrow */}
+        {arrowDir && arrowStyles[arrowDir] && (
           <div style={{
-            height: '100%', width: `${progress}%`,
-            background: t.gradient, transition: 'width 0.4s ease',
-            boxShadow: `0 0 8px ${t.accentGlow}`,
+            position:    'absolute',
+            width:       0,
+            height:      0,
+            borderStyle: 'solid',
+            ...arrowStyles[arrowDir],
           }} />
+        )}
+
+        {/* Progress bar */}
+        <div style={{ height:'3px', background:'rgba(255,255,255,0.06)' }}>
+          <div style={{ height:'100%', width:`${progress}%`, background:t.gradient, transition:'width 0.35s ease', boxShadow:`0 0 6px ${t.accentGlow}` }} />
         </div>
 
-        {/* ── Header ── */}
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.07)',
-          flexShrink: 0,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{
-              width: '32px', height: '32px', borderRadius: '8px',
-              background: t.gradient, display: 'flex', alignItems: 'center',
-              justifyContent: 'center', fontSize: '14px', fontWeight: 900, color: '#fff',
-              boxShadow: `0 0 12px ${t.accentGlow}`,
-            }}>Z</div>
-            <div>
-              <p style={{ fontWeight: 800, fontSize: '13px', color: '#fff', margin: 0 }}>ZephyrAI IDX</p>
-              <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)', margin: 0 }}>
-                Step {step + 1} of {STEPS.length}
-              </p>
-            </div>
+        {/* Header */}
+        <div style={{ padding:'14px 16px 0', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
+            <div style={{ width:'26px', height:'26px', borderRadius:'7px', background:t.gradient, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'12px', fontWeight:900, color:'#fff', boxShadow:`0 0 10px ${t.accentGlow}`, flexShrink:0 }}>Z</div>
+            <span style={{ fontSize:'10px', color:'rgba(255,255,255,0.35)', fontWeight:600 }}>
+              {step + 1} / {STEPS.length}
+            </span>
           </div>
-          <button
-            onClick={handleClose}
-            style={{
-              padding: '6px 14px', borderRadius: '8px',
-              border: '1px solid rgba(255,255,255,0.15)',
-              background: 'rgba(255,255,255,0.05)',
-              color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
-              fontSize: '12px', fontWeight: 600,
-              transition: 'all 0.2s',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#fff' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'rgba(255,255,255,0.5)' }}
-          >
-            Skip Tour
+          <button onClick={handleClose}
+            style={{ background:'none', border:'none', color:'rgba(255,255,255,0.3)', cursor:'pointer', fontSize:'16px', lineHeight:1, padding:'2px 4px', transition:'color 0.2s' }}
+            onMouseEnter={e=>e.currentTarget.style.color='rgba(255,255,255,0.8)'}
+            onMouseLeave={e=>e.currentTarget.style.color='rgba(255,255,255,0.3)'}>
+            ✕
           </button>
         </div>
 
-        {/* ── Body ── */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '28px 28px 16px' }}>
-
-          {/* Step icon + title */}
-          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-            <div style={{
-              width: '72px', height: '72px', borderRadius: '20px',
-              background: `${t.accent}20`, border: `2px solid ${t.accent}40`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '36px', margin: '0 auto 16px',
-              boxShadow: `0 0 30px ${t.accentGlow}`,
-            }}>
-              {current.emoji}
-            </div>
-            <h2 style={{ fontWeight: 900, fontSize: '22px', color: '#fff', margin: '0 0 10px' }}>
-              {current.title}
-            </h2>
-            <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.7, margin: 0, maxWidth: '480px', marginLeft: 'auto', marginRight: 'auto' }}>
-              {current.description}
-            </p>
-          </div>
-
-          {/* Tip banner */}
-          {current.tip && (
-            <div style={{
-              display: 'flex', alignItems: 'flex-start', gap: '10px',
-              padding: '12px 14px', borderRadius: '12px',
-              background: `${t.accent}12`, border: `1px solid ${t.accent}35`,
-              marginBottom: '20px',
-            }}>
-              <span style={{ fontSize: '16px', flexShrink: 0 }}>💡</span>
-              <p style={{ fontSize: '12px', color: t.accent, fontWeight: 600, margin: 0, lineHeight: 1.5 }}>
-                {current.tip}
-              </p>
-            </div>
-          )}
-
-          {/* Interactive hint */}
-          {current.interactive && (
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: '8px',
-              padding: '10px 14px', borderRadius: '10px',
-              background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)',
-              marginBottom: '20px', animation: 'tutorialPulse 2s infinite',
-            }}>
-              <span style={{ fontSize: '14px' }}>👆</span>
-              <p style={{ fontSize: '12px', color: '#86efac', fontWeight: 700, margin: 0 }}>
-                {current.interactive}
-              </p>
-            </div>
-          )}
-
-          {/* Demo items grid */}
-          {current.demo && current.demo.length > 0 && (
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: current.demo.length > 6 ? '1fr 1fr' : '1fr',
-              gap: '8px',
-              marginBottom: '8px',
-            }}>
-              {current.demo.map((item, i) => (
-                <div
-                  key={i}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '12px',
-                    padding: '10px 14px', borderRadius: '10px',
-                    background: 'rgba(255,255,255,0.04)',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    transition: 'all 0.2s',
-                    animation: `tutorialSlideIn 0.3s ease ${i * 0.06}s both`,
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.background = `${t.accent}15`
-                    e.currentTarget.style.borderColor = `${t.accent}40`
-                    e.currentTarget.style.transform = 'translateX(4px)'
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.04)'
-                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'
-                    e.currentTarget.style.transform = 'translateX(0)'
-                  }}
-                >
-                  <span style={{
-                    fontSize: current.demo.length > 6 ? '14px' : '18px',
-                    flexShrink: 0, minWidth: '32px',
-                    fontWeight: 700, color: t.accent,
-                  }}>
-                    {item.icon}
-                  </span>
-                  <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)', lineHeight: 1.4 }}>
-                    {item.label}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* CTA step special content */}
-          {current.type === 'cta' && (
-            <div style={{ textAlign: 'center', marginTop: '20px' }}>
-              <button
-                onClick={() => { handleClose(); setTimeout(() => onSignIn?.(), 300) }}
-                style={{
-                  padding: '14px 32px', borderRadius: '12px', border: 'none',
-                  background: t.gradient, color: '#fff', cursor: 'pointer',
-                  fontSize: '15px', fontWeight: 800,
-                  boxShadow: `0 8px 24px ${t.accentGlow}`,
-                  marginBottom: '12px', width: '100%',
-                  transition: 'transform 0.2s, box-shadow 0.2s',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.boxShadow = `0 12px 32px ${t.accentGlow}` }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = `0 8px 24px ${t.accentGlow}` }}
-              >
-                🚀 Create Free Account
-              </button>
-              <button
-                onClick={handleClose}
-                style={{
-                  padding: '12px 32px', borderRadius: '12px',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  background: 'transparent', color: 'rgba(255,255,255,0.6)',
-                  cursor: 'pointer', fontSize: '14px', fontWeight: 600, width: '100%',
-                }}
-              >
-                Browse Without Account
-              </button>
-            </div>
-          )}
-
+        {/* Body */}
+        <div style={{ padding:'12px 16px 14px' }}>
+          <p style={{ fontWeight:800, fontSize:'14px', color:'#fff', margin:'0 0 7px', lineHeight:1.3 }}>
+            {current.title}
+          </p>
+          <p style={{ fontSize:'12px', color:'rgba(255,255,255,0.72)', lineHeight:1.65, margin:0 }}>
+            {current.description}
+          </p>
         </div>
 
-        {/* ── Footer ── */}
-        <div style={{
-          padding: '16px 28px 24px',
-          borderTop: '1px solid rgba(255,255,255,0.07)',
-          flexShrink: 0,
-        }}>
+        {/* Footer */}
+        <div style={{ padding:'0 16px 14px', display:'flex', flexDirection:'column', gap:'10px' }}>
+
+          {/* Nav buttons */}
+          <div style={{ display:'flex', gap:'8px' }}>
+            <button onClick={handlePrev} disabled={isFirst}
+              style={{ padding:'8px 14px', borderRadius:'8px', border:'1px solid rgba(255,255,255,0.12)', background:'rgba(255,255,255,0.05)', color:isFirst?'rgba(255,255,255,0.2)':'rgba(255,255,255,0.7)', cursor:isFirst?'not-allowed':'pointer', fontSize:'12px', fontWeight:700, transition:'all 0.2s', flexShrink:0 }}
+              onMouseEnter={e=>{ if(!isFirst) e.currentTarget.style.background='rgba(255,255,255,0.1)' }}
+              onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,0.05)'}>
+              ← Back
+            </button>
+            <button onClick={handleNext}
+              style={{ flex:1, padding:'8px', borderRadius:'8px', border:'none', background:isLast?'#16a34a':t.gradient, color:'#fff', cursor:'pointer', fontSize:'12px', fontWeight:800, boxShadow:`0 2px 12px ${isLast?'rgba(22,163,74,0.4)':t.accentGlow}`, transition:'all 0.2s' }}
+              onMouseEnter={e=>e.currentTarget.style.transform='scale(1.02)'}
+              onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}>
+              {isLast ? '🎉 Start Exploring!' : step === 0 ? 'Start Tour →' : `Next →`}
+            </button>
+          </div>
+
           {/* Dot indicators */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '16px', flexWrap: 'wrap' }}>
-            {STEPS.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => handleDotClick(i)}
-                style={{
-                  width: i === step ? '20px' : '7px',
-                  height: '7px', borderRadius: '4px', border: 'none',
-                  background: i === step ? t.accent : i < step ? `${t.accent}60` : 'rgba(255,255,255,0.2)',
-                  cursor: 'pointer', padding: 0,
-                  transition: 'all 0.3s',
-                  boxShadow: i === step ? `0 0 6px ${t.accentGlow}` : 'none',
-                }}
-              />
+          <div style={{ display:'flex', justifyContent:'center', gap:'5px', flexWrap:'wrap' }}>
+            {STEPS.map((_,i) => (
+              <button key={i} onClick={()=>setStep(i)}
+                style={{ width:i===step?'18px':'6px', height:'6px', borderRadius:'3px', border:'none', background:i===step?t.accent:i<step?`${t.accent}55`:'rgba(255,255,255,0.18)', cursor:'pointer', padding:0, transition:'all 0.28s', boxShadow:i===step?`0 0 6px ${t.accentGlow}`:'none' }} />
             ))}
           </div>
 
-          {/* Nav buttons */}
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <button
-              onClick={handlePrev}
-              disabled={isFirst}
-              style={{
-                padding: '11px 20px', borderRadius: '10px',
-                border: '1px solid rgba(255,255,255,0.15)',
-                background: 'rgba(255,255,255,0.05)',
-                color: isFirst ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.7)',
-                cursor: isFirst ? 'not-allowed' : 'pointer',
-                fontSize: '13px', fontWeight: 700, flexShrink: 0,
-                transition: 'all 0.2s',
-              }}
-            >
-              ← Back
-            </button>
-
-            <button
-              onClick={handleNext}
-              style={{
-                flex: 1, padding: '12px', borderRadius: '10px', border: 'none',
-                background: isLast ? '#16a34a' : t.gradient,
-                color: '#fff', cursor: 'pointer',
-                fontSize: '14px', fontWeight: 800,
-                boxShadow: `0 4px 16px ${isLast ? 'rgba(22,163,74,0.4)' : t.accentGlow}`,
-                transition: 'all 0.2s',
-              }}
-              onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
-              onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-            >
-              {isLast ? '🎉 Start Exploring!' : step === 0 ? '🚀 Start Tour →' : `Next: ${STEPS[step + 1]?.title?.split(' ').slice(0, 3).join(' ')}… →`}
-            </button>
-          </div>
-
           {/* Skip next time */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: '14px' }}>
-            <button
-              onClick={() => setSkipNext(!skipNext)}
-              style={{
-                width: '18px', height: '18px', borderRadius: '5px', border: 'none',
-                background: skipNext ? t.accent : 'rgba(255,255,255,0.15)',
-                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0, transition: 'background 0.2s',
-              }}
-            >
-              {skipNext && <span style={{ color: '#fff', fontSize: '11px', fontWeight: 900 }}>✓</span>}
-            </button>
-            <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}
-              onClick={() => setSkipNext(!skipNext)}>
-              Don't show this again (saved in cookies)
-            </span>
-          </div>
+          <label style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:'7px', cursor:'pointer' }}
+            onClick={()=>setSkipNext(!skipNext)}>
+            <div style={{ width:'16px', height:'16px', borderRadius:'4px', border:`2px solid ${skipNext?t.accent:'rgba(255,255,255,0.2)'}`, background:skipNext?t.accent:'transparent', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'all 0.2s' }}>
+              {skipNext && <span style={{ color:'#fff', fontSize:'10px', fontWeight:900, lineHeight:1 }}>✓</span>}
+            </div>
+            <span style={{ fontSize:'11px', color:'rgba(255,255,255,0.35)' }}>Don't show again</span>
+          </label>
         </div>
       </div>
 
       <style>{`
-        @keyframes tutorialIn {
-          from { opacity: 0; transform: scale(0.92) translateY(20px); }
-          to   { opacity: 1; transform: scale(1)    translateY(0);    }
+        @keyframes tourPulse {
+          0%,100% { box-shadow: 0 0 0 3px ${t.accentGlow}, 0 0 20px ${t.accentGlow}; }
+          50%      { box-shadow: 0 0 0 6px ${t.accentGlow}, 0 0 40px ${t.accentGlow}; }
         }
-        @keyframes tutorialSlideIn {
-          from { opacity: 0; transform: translateX(-10px); }
-          to   { opacity: 1; transform: translateX(0);     }
-        }
-        @keyframes tutorialPulse {
-          0%,100% { opacity: 1; }
-          50%      { opacity: 0.6; }
+        @keyframes tourSlideIn {
+          from { opacity:0; transform: scale(0.92) translateY(6px); }
+          to   { opacity:1; transform: scale(1)    translateY(0);   }
         }
       `}</style>
     </div>
