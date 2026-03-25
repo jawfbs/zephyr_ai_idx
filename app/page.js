@@ -74,6 +74,7 @@ export default function ZephyrPage() {
   const [toasts,              setToasts]             = useState([])
   const [newAchievement,      setNewAchievement]     = useState(null)
   const [featureSettings,     setFeatureSettings]    = useState(DEFAULT_FEATURE_SETTINGS)
+  const [activeLayoutId,      setActiveLayoutId]     = useState(DEFAULT_LAYOUT_ID)
 
   const accordionRef = useRef(null)
   const contactRef   = useRef(null)
@@ -81,18 +82,26 @@ export default function ZephyrPage() {
 useEffect(() => {
     setUserStats(loadStats())
     setFeatureSettings(loadFeat())
-    // Load color mode from cookie
+// Load color mode from cookie
     const cm = document.cookie.split(';').find(c => c.trim().startsWith('zephyr_colormode='))
     if (cm) setColorMode(cm.split('=')[1].trim())
+    // Load layout from cookie
+    const lc = document.cookie.split(';').find(c => c.trim().startsWith('zephyr_layout='))
+    if (lc) setActiveLayoutId(lc.split('=')[1].trim())
     // Check tutorial cookie
     const skip = document.cookie.split(';').find(c => c.trim().startsWith('zephyr_skip_tutorial='))
     if (!skip) setTutorialOpen(true)
   }, [])
 
 useEffect(() => { saveFeat(featureSettings) }, [featureSettings])
+
   useEffect(() => {
     document.cookie = `zephyr_colormode=${colorMode}; max-age=31536000; path=/`
   }, [colorMode])
+
+  useEffect(() => {
+    document.cookie = `zephyr_layout=${activeLayoutId}; max-age=31536000; path=/`
+  }, [activeLayoutId])
 
   const [tutorialOpen, setTutorialOpen] = useState(false)
 
@@ -191,12 +200,19 @@ useEffect(() => { saveFeat(featureSettings) }, [featureSettings])
       return 0
     })
 
+// ── Resolve active layout ──
+  const activeLayout = LAYOUTS.find(l => l.id === activeLayoutId) || LAYOUTS[0]
+
   const cm = {
     light:  { bg:'#f8fafc',surface:'#ffffff',surfaceAlt:'#f1f5f9',border:'rgba(0,0,0,0.08)',text:'#0f172a',textMuted:'#64748b',textFaint:'#94a3b8',headerBg:'#ffffff',cardBg:'#ffffff',inputBg:'#f8fafc',pillBg:'#f1f5f9',pillBorder:'#e2e8f0',searchShadow:'0 4px 24px rgba(0,0,0,0.08)' },
     mellow: { bg:'#1e1e2e',surface:'#27273a',surfaceAlt:'#2e2e42',border:'rgba(255,255,255,0.08)',text:'#e2e8f0',textMuted:'#94a3b8',textFaint:'#64748b',headerBg:'#1a1a2e',cardBg:'#27273a',inputBg:'#2e2e42',pillBg:'#2e2e42',pillBorder:'rgba(255,255,255,0.1)',searchShadow:'0 4px 24px rgba(0,0,0,0.3)' },
     dark:   { bg:'#0a0a0f',surface:'#111118',surfaceAlt:'#18181f',border:'rgba(255,255,255,0.06)',text:'#f1f5f9',textMuted:'#94a3b8',textFaint:'#475569',headerBg:'#0a0a0f',cardBg:'#111118',inputBg:'#18181f',pillBg:'#18181f',pillBorder:'rgba(255,255,255,0.07)',searchShadow:'0 4px 32px rgba(0,0,0,0.5)' },
   }
-  const c = cm[colorMode]
+
+  // Apply layout overrides on top of color mode
+  const c = activeLayout.overrides
+    ? { ...cm[colorMode], ...activeLayout.overrides }
+    : cm[colorMode]
   const t = activeTheme
 
   const ModeIcon  = colorMode === 'light' ? Sun : colorMode === 'mellow' ? Sunset : Moon
@@ -243,7 +259,32 @@ const accordionSections = user ? [
   ]
 
   return (
-    <div style={{ display:'flex',flexDirection:'column',height:'100vh',overflow:'hidden',fontFamily:'"Inter",system-ui,sans-serif',backgroundColor:c.bg,color:c.text,transition:'background 0.3s,color 0.3s' }}>
+<div
+      style={{
+        display:'flex', flexDirection:'column', height:'100vh', overflow:'hidden',
+        fontFamily: activeLayout.vars?.['--font-body'] || '"Inter",system-ui,sans-serif',
+        backgroundColor:c.bg, color:c.text, transition:'background 0.3s,color 0.3s',
+        position:'relative',
+        // CSS variable injection
+        ...Object.fromEntries(Object.entries(activeLayout.vars || {}).map(([k,v]) => [k,v])),
+      }}
+    >
+      {/* Bold Tech grid/scanline overlay */}
+      {activeLayoutId === 'bold_tech' && (
+        <div style={{
+          position:'fixed', inset:0, pointerEvents:'none', zIndex:0,
+          backgroundImage: activeLayout.vars['--grid-overlay'],
+          backgroundSize: '40px 40px',
+          opacity: 0.6,
+        }} />
+      )}
+      {activeLayoutId === 'bold_tech' && (
+        <div style={{
+          position:'fixed', inset:0, pointerEvents:'none', zIndex:0,
+          backgroundImage: activeLayout.vars['--scanline'],
+      </div> 
+      }} />
+      )}
 
       {gamificationEnabled && <XPToast toasts={toasts} />}
 
