@@ -329,7 +329,12 @@ const accordionSections = user ? [
       )}
 
       {/* ── HEADER ── */}
-      <header style={{ backgroundColor:c.headerBg,borderBottom:`1px solid ${c.border}`,padding:'0 20px',height:'58px',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0,zIndex:100 }}>
+      <header style={{
+        backgroundColor: activeLayoutId === 'bold_tech' ? 'rgba(5,5,16,0.88)' : c.headerBg,
+        borderBottom:`1px solid ${c.border}`,
+        backdropFilter: activeLayout.vars?.['--header-blur'] || 'none',
+        WebkitBackdropFilter: activeLayout.vars?.['--header-blur'] || 'none',
+        boxShadow: activeLayoutId === 'bold_tech' ? '0 1px 0 rgba(0,245,255,0.15), 0 4px 24px rgba(0,0,0,0.4)' : 'none',
         <div style={{ display:'flex',alignItems:'center',gap:'28px' }}>
           <div style={{ display:'flex',alignItems:'center',gap:'10px' }}>
             <div style={{ width:'36px',height:'36px',borderRadius:'10px',background:t.gradient,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 0 16px ${t.accentGlow}` }}>
@@ -456,7 +461,8 @@ const accordionSections = user ? [
                         onOpenGamification={() => { setGamificationOpen(true); setAccordionOpen(false) }}
                         userStats={userStats}
                         featureSettings={featureSettings} setFeatureSettings={setFeatureSettings}
-                        onOpenHelp={() => { setTutorialOpen(true); setAccordionOpen(false) }}
+                        onOpenHelp={() => { setTutorialOpen(true); setAccordionOpen(false)}
+                        activeLayoutId={activeLayoutId} setActiveLayoutId={setActiveLayoutId}
                       />
                     ))}
                   </>
@@ -641,7 +647,13 @@ const accordionSections = user ? [
           {loading ? (
             <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:'16px' }}>
               {Array.from({length:8}).map((_,i)=>(
-                <div key={i} style={{ background:c.cardBg,borderRadius:'16px',overflow:'hidden',border:`1px solid ${c.border}`,animation:'pulse 1.5s infinite' }}>
+                style={{
+                      background: activeLayoutId === 'bold_tech' ? 'rgba(10,10,26,0.9)' : c.cardBg,
+                      borderRadius: activeLayout.vars?.['--radius-card'] || '16px',
+                      overflow:'hidden',
+                      border: activeLayoutId === 'bold_tech'
+                        ? isHovered ? `1px solid ${t.accent}` : `1px solid rgba(0,245,255,0.12)`
+                        : `1px solid ${isHovered?t.accent+'60':c.border}`,
                   <div style={{ height:'200px',background:c.surfaceAlt }} />
                   <div style={{ padding:'14px' }}>
                     <div style={{ height:'14px',background:c.surfaceAlt,borderRadius:'4px',marginBottom:'8px',width:'60%' }} />
@@ -768,7 +780,7 @@ const accordionSections = user ? [
         )}
       </div>
 
-      <style>{`
+<style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         *{box-sizing:border-box;margin:0;padding:0}
         ::-webkit-scrollbar{width:6px}
@@ -778,13 +790,53 @@ const accordionSections = user ? [
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
         @keyframes carouselFade{from{opacity:0.4;transform:scale(1.02)}to{opacity:1;transform:scale(1)}}
         @keyframes aiPulse{
-          0%,100%{ box-shadow: 0 0 8px ${t.accentGlow}, 0 2px 8px rgba(0,0,0,0.2); transform: scale(1); }
-          50%    { box-shadow: 0 0 20px ${t.accentGlow}, 0 0 32px ${t.accentGlow}, 0 2px 8px rgba(0,0,0,0.2); transform: scale(1.05); }
+          0%,100%{ box-shadow:0 0 8px ${t.accentGlow},0 2px 8px rgba(0,0,0,0.2);transform:scale(1); }
+          50%    { box-shadow:0 0 20px ${t.accentGlow},0 0 32px ${t.accentGlow},0 2px 8px rgba(0,0,0,0.2);transform:scale(1.05); }
         }
-        @keyframes aiSlideIn{
-          from{ opacity:0; transform:translateY(4px); }
-          to  { opacity:1; transform:translateY(0); }
-        }
+        @keyframes aiSlideIn{ from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+
+        /* ── Bold Tech extras ── */
+        ${activeLayoutId === 'bold_tech' ? `
+          h1,h2,h3,h4 {
+            font-weight: 900 !important;
+            letter-spacing: -0.03em !important;
+            font-family: 'Inter', system-ui, sans-serif !important;
+          }
+          button { transition: all 0.15s ease !important; }
+          input, select, textarea {
+            border-radius: 8px !important;
+          }
+          /* Neon focus rings */
+          input:focus, select:focus, textarea:focus {
+            box-shadow: 0 0 0 2px rgba(0,245,255,0.4) !important;
+            border-color: rgba(0,245,255,0.8) !important;
+          }
+          /* Scan line animation */
+          @keyframes scanMove {
+            from { transform: translateY(-100%); }
+            to   { transform: translateY(100vh); }
+          }
+          /* Bold Tech card hover glow */
+          .bt-card:hover {
+            box-shadow: 0 0 30px rgba(0,245,255,0.15), 0 8px 32px rgba(0,0,0,0.5) !important;
+          }
+        ` : ''}
+
+        /* ── Glass layout extras ── */
+        ${activeLayoutId === 'glass' ? `
+          .card-glass {
+            backdrop-filter: blur(16px) !important;
+            -webkit-backdrop-filter: blur(16px) !important;
+          }
+        ` : ''}
+
+        /* ── Editorial serif headings ── */
+        ${activeLayoutId === 'editorial' ? `
+          h1,h2,h3 {
+            font-family: Georgia, 'Times New Roman', serif !important;
+            letter-spacing: -0.01em !important;
+          }
+        ` : ''}
       `}</style>
     </div>
   )
