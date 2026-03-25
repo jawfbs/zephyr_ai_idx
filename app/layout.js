@@ -1,25 +1,18 @@
-import './globals.css'
+import { ClerkProvider } from '@clerk/nextjs'
 
 export const metadata = {
-  title: 'ZephyrAI IDX',
-  description: 'Search homes for sale, real estate listings powered by ZephyrAI IDX',
-  icons: {
-    icon: '/favicon.ico',
-  },
+  title:       'ZephyrAI IDX — Fargo Real Estate',
+  description: 'AI-powered real estate platform for the Fargo ND area',
 }
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="font-sans bg-white">{children}</body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body style={{ margin: 0, padding: 0 }}>
+          {children}
+        </body>
+      </html>
+    </ClerkProvider>
   )
 }
