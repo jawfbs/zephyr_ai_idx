@@ -670,7 +670,6 @@ export default function ZephyrPage() {
                       <User size={15} /> Sign In / Register
                     </button>
 
-                    </div>
                   </div>
                 )}
               </div>
