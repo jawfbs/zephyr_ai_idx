@@ -10,8 +10,8 @@ import {
   Star,
   ChevronDown,
   ChevronUp,
-  ExternalLink,
   Loader2,
+  Info,
 } from 'lucide-react';
 
 // School Rating Component
@@ -47,7 +47,7 @@ function SchoolCard({ school, type }) {
       {school.details && (
         <button
           onClick={() => setExpanded(!expanded)}
-          className="mt-3 text-sm text-blue-600 hover:underline flex items-center gap-1"
+          className="mt-3 text-sm text-blue-600 hover:underline flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
           aria-expanded={expanded}
         >
           {expanded ? 'Hide details' : 'Show details'}
@@ -68,7 +68,7 @@ function SchoolCard({ school, type }) {
 }
 
 // Walk Score Component
-function WalkScoreCard({ scores }) {
+function WalkabilityCard({ scores }) {
   const getScoreColor = (score, type) => {
     if (score >= 70) return type === 'walk' ? 'bg-green-500' : type === 'bike' ? 'bg-blue-500' : 'bg-green-500';
     if (score >= 50) return type === 'walk' ? 'bg-yellow-500' : type === 'bike' ? 'bg-yellow-500' : 'bg-yellow-500';
@@ -77,7 +77,7 @@ function WalkScoreCard({ scores }) {
 
   const getScoreLabel = (score, type) => {
     if (type === 'walk') {
-      if (score >= 90) return "Walker's Paradise';
+      if (score >= 90) return "Walker's Paradise";
       if (score >= 70) return 'Very Walkable';
       if (score >= 50) return 'Somewhat Walkable';
       if (score >= 25) return 'Car-Dependent';
@@ -131,15 +131,9 @@ function WalkScoreCard({ scores }) {
           </div>
         ))}
       </div>
-      <a
-        href={`https://www.walkscore.com/`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-4 inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
-      >
-        Learn more about Walk Score
-        <ExternalLink className="w-3 h-3" aria-hidden="true" />
-      </a>
+      <p className="mt-4 text-xs text-gray-400 italic">
+        Score estimates based on typical neighborhood characteristics
+      </p>
     </div>
   );
 }
@@ -196,11 +190,8 @@ function CrimeStatsCard({ crimeData }) {
         ))}
       </div>
 
-      <p className="mt-4 text-xs text-gray-500">
-        Based on FBI crime data. For detailed information, visit your local police department or 
-        <a href="https://www.neighborhoodscout.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-1">
-          NeighborhoodScout
-        </a>
+      <p className="mt-4 text-xs text-gray-400 italic">
+        Estimates based on regional data. Contact local authorities for official statistics.
       </p>
     </div>
   );
@@ -250,15 +241,9 @@ function DemographicsCard({ demographics }) {
         </div>
       )}
 
-      <a
-        href={`https://www.census.gov/`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-4 inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
-      >
-        Source: U.S. Census Bureau
-        <ExternalLink className="w-3 h-3" aria-hidden="true" />
-      </a>
+      <p className="mt-4 text-xs text-gray-400 italic">
+        Demographic estimates based on regional census data
+      </p>
     </div>
   );
 }
@@ -276,12 +261,10 @@ export function NeighborhoodData({ address }) {
 
       setLoading(true);
       try {
-        // Simulate API call - in production, you'd call your backend
-        // which would aggregate data from GreatSchools, Walk Score, etc.
-        
-        // Simulated data based on typical Fargo/Moorhead area
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Simulate loading delay
+        await new Promise(resolve => setTimeout(resolve, 800));
 
+        // Static demo data - no external API calls
         setData({
           schools: [
             {
@@ -317,7 +300,7 @@ export function NeighborhoodData({ address }) {
               distance: '2.1 mi',
               rating: 7,
               details: {
-                students: 1,250,
+                students: 1250,
                 type: 'Public',
                 mathProficiency: '72%',
                 readingProficiency: '80%',
@@ -349,8 +332,8 @@ export function NeighborhoodData({ address }) {
           },
         });
       } catch (err) {
-        console.error('Error fetching neighborhood data:', err);
-        setError('Failed to load neighborhood data');
+        console.error('Error loading neighborhood data:', err);
+        setError('Unable to load neighborhood information');
       } finally {
         setLoading(false);
       }
@@ -365,8 +348,9 @@ export function NeighborhoodData({ address }) {
         <h2 id="neighborhood-heading" className="text-xl font-semibold text-gray-900 mb-6">
           Neighborhood Information
         </h2>
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 text-blue-600 animate-spin" aria-label="Loading neighborhood data" />
+        <div className="flex items-center justify-center py-12" role="status" aria-label="Loading neighborhood data">
+          <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+          <span className="ml-3 text-gray-500">Loading neighborhood data...</span>
         </div>
       </section>
     );
@@ -378,7 +362,10 @@ export function NeighborhoodData({ address }) {
         <h2 id="neighborhood-heading" className="text-xl font-semibold text-gray-900 mb-4">
           Neighborhood Information
         </h2>
-        <p className="text-gray-500">Unable to load neighborhood data at this time.</p>
+        <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg text-gray-600">
+          <Info className="w-5 h-5" aria-hidden="true" />
+          <p>Neighborhood data currently unavailable. Please check back later.</p>
+        </div>
       </section>
     );
   }
@@ -398,17 +385,32 @@ export function NeighborhoodData({ address }) {
         </h2>
         <div className="flex items-center gap-2 text-sm text-gray-500">
           <MapPin className="w-4 h-4" aria-hidden="true" />
-          {address?.City || 'Local Area'}
+          <span>{address?.City || 'Local Area'}</span>
         </div>
       </div>
 
+      {/* Info Banner */}
+      <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+        <p className="text-sm text-amber-800 flex items-start gap-2">
+          <Info className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden="true" />
+          <span>
+            <strong>Demo Mode:</strong> This data is for demonstration purposes only. 
+            In production, this would connect to real-time data sources for accurate neighborhood information.
+          </span>
+        </p>
+      </div>
+
       {/* Tabs */}
-      <div className="flex gap-2 mb-6 overflow-x-auto border-b" role="tablist">
+      <div 
+        className="flex gap-2 mb-6 overflow-x-auto border-b"
+        role="tablist"
+        aria-label="Neighborhood information categories"
+      >
         {tabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             onClick={() => setActiveTab(id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-t-lg font-medium transition-colors whitespace-nowrap ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-t-lg font-medium transition-colors whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               activeTab === id
                 ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
                 : 'text-gray-600 hover:bg-gray-50'
@@ -419,7 +421,7 @@ export function NeighborhoodData({ address }) {
             id={`tab-${id}`}
           >
             <Icon className="w-4 h-4" aria-hidden="true" />
-            {label}
+            <span>{label}</span>
           </button>
         ))}
       </div>
@@ -434,15 +436,7 @@ export function NeighborhoodData({ address }) {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold text-gray-900">Nearby Schools</h3>
-              <a
-                href={`https://www.greatschools.org/`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-blue-600 hover:underline flex items-center gap-1"
-              >
-                View on GreatSchools
-                <ExternalLink className="w-3 h-3" aria-hidden="true" />
-              </a>
+              <span className="text-xs text-gray-500">Based on typical school district boundaries</span>
             </div>
             {data.schools.map((school, index) => (
               <SchoolCard key={index} school={school} type={school.type} />
@@ -451,7 +445,7 @@ export function NeighborhoodData({ address }) {
         )}
 
         {activeTab === 'walkability' && (
-          <WalkScoreCard scores={data.walkScore} />
+          <WalkabilityCard scores={data.walkScore} />
         )}
 
         {activeTab === 'safety' && (
