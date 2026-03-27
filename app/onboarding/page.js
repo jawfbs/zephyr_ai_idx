@@ -4,17 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import Link from 'next/link';
-import { 
-  Home, 
-  ArrowRight, 
-  ArrowLeft,
-  Check,
-  Home as HomeIcon,
-  Briefcase,
-  Users,
-  Building2,
-  Sparkles,
-} from 'lucide-react';
+import { Home, ArrowRight, Check, Home as HomeIcon, Briefcase, Users, Building2, Sparkles } from 'lucide-react';
 
 const roles = [
   {
@@ -23,13 +13,6 @@ const roles = [
     description: 'Search listings, save favorites, and get price alerts',
     icon: HomeIcon,
     color: 'blue',
-    features: [
-      'Browse all listings',
-      'Save favorite homes',
-      'Set price drop alerts',
-      'Mortgage calculator',
-      'Schedule tours',
-    ],
   },
   {
     id: 'agent',
@@ -37,14 +20,6 @@ const roles = [
     description: 'Full IDX access and client management tools',
     icon: Briefcase,
     color: 'purple',
-    features: [
-      'All homebuyer features',
-      'Post listings',
-      'Client management',
-      'Lead tracking',
-      'Market analytics',
-      'SparkAPI access',
-    ],
     badge: 'Popular',
   },
   {
@@ -53,13 +28,6 @@ const roles = [
     description: 'Collaborate with multiple agents',
     icon: Users,
     color: 'green',
-    features: [
-      'All agent features',
-      'Shared listings',
-      'Team dashboard',
-      'Commission tracking',
-      'Internal messaging',
-    ],
   },
   {
     id: 'brokerage',
@@ -67,14 +35,6 @@ const roles = [
     description: 'Full platform with custom branding',
     icon: Building2,
     color: 'amber',
-    features: [
-      'All team features',
-      'Custom branding',
-      'Multiple offices',
-      'API access',
-      'White-label options',
-      'Priority support',
-    ],
   },
 ];
 
@@ -91,12 +51,11 @@ export default function OnboardingPage() {
   }, [isLoaded, user, router]);
 
   const handleContinue = async () => {
-    if (!selectedRole) return;
+    if (!selectedRole || !user) return;
     
     setLoading(true);
     
     try {
-      // Save role to user metadata in Clerk
       await user.update({
         publicMetadata: {
           role: selectedRole,
@@ -104,15 +63,7 @@ export default function OnboardingPage() {
         },
       });
       
-      // Redirect based on role
-      const redirects = {
-        homebuyer: '/',
-        agent: '/dashboard',
-        team: '/dashboard',
-        brokerage: '/dashboard',
-      };
-      
-      router.push(redirects[selectedRole]);
+      router.push('/');
     } catch (error) {
       console.error('Error saving role:', error);
     } finally {
@@ -130,54 +81,26 @@ export default function OnboardingPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white border-b">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <Home className="w-8 h-8 text-blue-600" />
             <span className="text-xl font-bold text-gray-900">ZephyrAI IDX</span>
           </Link>
-          <Link href="/" className="text-gray-500 hover:text-gray-700 flex items-center gap-1 text-sm">
-            <ArrowLeft className="w-4 h-4" />
-            Skip for now
-          </Link>
+          <Link href="/" className="text-gray-500 hover:text-gray-700 text-sm">Skip for now</Link>
         </div>
       </header>
 
-      {/* Progress Bar */}
-      <div className="bg-white border-b">
-        <div className="max-w-4xl mx-auto px-4 py-3">
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <div className="flex items-center gap-1">
-              <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white text-xs">
-                <Check className="w-4 h-4" />
-              </div>
-              <span>Account Created</span>
-            </div>
-            <div className="flex-1 h-0.5 bg-gray-200 mx-4">
-              <div className="h-full bg-blue-600 w-1/2" />
-            </div>
-            <span className="text-blue-600 font-medium">Choose Your Role</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 py-12">
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-sm font-medium mb-4">
             <Sparkles className="w-4 h-4" />
-            <span>Personalize Your Experience</span>
+            Personalize Your Experience
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-3">
-            How will you use ZephyrAI IDX?
-          </h1>
-          <p className="text-gray-600 max-w-xl mx-auto">
-            Select the option that best describes you. You can always change this later in settings.
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-3">How will you use ZephyrAI IDX?</h1>
+          <p className="text-gray-600">Select the option that best describes you.</p>
         </div>
 
-        {/* Role Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
           {roles.map((role) => {
             const Icon = role.icon;
@@ -199,10 +122,7 @@ export default function OnboardingPage() {
               <button
                 key={role.id}
                 onClick={() => setSelectedRole(role.id)}
-                className={`relative p-6 rounded-xl border-2 text-left transition-all ${colorClasses[role.color]} ${
-                  isSelected ? 'shadow-md' : 'hover:shadow-md'
-                }`}
-                aria-pressed={isSelected}
+                className={`relative p-6 rounded-xl border-2 text-left transition-all ${colorClasses[role.color]} ${isSelected ? 'shadow-md' : ''}`}
               >
                 {role.badge && (
                   <span className="absolute top-3 right-3 bg-purple-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
@@ -214,7 +134,7 @@ export default function OnboardingPage() {
                   <div className={`p-3 rounded-lg ${iconBgClasses[role.color]}`}>
                     <Icon className="w-6 h-6" />
                   </div>
-                  <div className="flex-1">
+                  <div>
                     <div className="flex items-center gap-2">
                       <h3 className="text-lg font-semibold text-gray-900">{role.title}</h3>
                       {isSelected && (
@@ -226,55 +146,21 @@ export default function OnboardingPage() {
                     <p className="text-sm text-gray-600 mt-1">{role.description}</p>
                   </div>
                 </div>
-
-                {isSelected && (
-                  <ul className="mt-4 space-y-2">
-                    {role.features.slice(0, 4).map((feature, index) => (
-                      <li key={index} className="flex items-center gap-2 text-sm text-gray-700">
-                        <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                        {feature}
-                      </li>
-                    ))}
-                    {role.features.length > 4 && (
-                      <li className="text-sm text-gray-500 pl-6">
-                        +{role.features.length - 4} more features
-                      </li>
-                    )}
-                  </ul>
-                )}
               </button>
             );
           })}
         </div>
 
-        {/* Continue Button */}
         <div className="flex justify-center">
           <button
             onClick={handleContinue}
             disabled={!selectedRole || loading}
-            className="px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            {loading ? (
-              <>
-                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                Setting up...
-              </>
-            ) : (
-              <>
-                Continue
-                <ArrowRight className="w-5 h-5" />
-              </>
-            )}
+            {loading ? 'Setting up...' : 'Continue'}
+            <ArrowRight className="w-5 h-5" />
           </button>
         </div>
-
-        {/* Note */}
-        <p className="text-center text-sm text-gray-500 mt-8">
-          You can access all features after selecting a role. Some features may require additional verification.
-        </p>
       </main>
     </div>
   );
