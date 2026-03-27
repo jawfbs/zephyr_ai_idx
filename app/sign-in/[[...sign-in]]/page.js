@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useSignIn } from '@clerk/nextjs';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Home, Eye, EyeOff, ArrowLeft, Mail, Lock, AlertCircle } from 'lucide-react';
+import { Home, Eye, EyeOff, Mail, Lock, AlertCircle } from 'lucide-react';
 
 export default function SignInPage() {
   const { isLoaded, signIn, setActive } = useSignIn();
@@ -15,7 +15,6 @@ export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [needsVerification, setNeedsVerification] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,11 +30,7 @@ export default function SignInPage() {
         password: password,
       });
 
-      if (result.status === 'needs_first_factor') {
-        // Send to first factor verification
-        setNeedsVerification(true);
-      } else if (result.status === 'complete') {
-        // Successfully signed in
+      if (result.status === 'complete') {
         await setActive({ session: result.createdSessionId });
         router.push('/');
       } else {
@@ -44,7 +39,6 @@ export default function SignInPage() {
     } catch (err) {
       console.error('Sign in error:', err);
       
-      // Handle specific Clerk errors
       if (err.errors?.[0]?.code === 'form_identifier_not_found') {
         setError('No account found with this email address.');
       } else if (err.errors?.[0]?.code === 'form_password_incorrect') {
@@ -57,87 +51,6 @@ export default function SignInPage() {
     }
   };
 
-  // Verification view (for 2FA or email verification)
-  if (needsVerification) {
-    return (
-      <div className="min-h-screen flex flex-col lg:flex-row">
-        {/* Left Side - Branding */}
-        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-900 via-blue-800 to-purple-900 p-12 flex-col justify-between">
-          <div>
-            <Link href="/" className="flex items-center gap-2 text-white">
-              <Home className="w-8 h-8" />
-              <span className="text-2xl font-bold">ZephyrAI IDX</span>
-            </Link>
-          </div>
-          
-          <div className="text-white">
-            <h1 className="text-4xl font-bold mb-4">Welcome Back</h1>
-            <p className="text-xl text-blue-200">
-              Sign in to access your saved homes, alerts, and personalized recommendations.
-            </p>
-            
-            <div className="mt-12 grid grid-cols-2 gap-4">
-              <div className="bg-white/10 backdrop-blur rounded-lg p-4">
-                <p className="text-3xl font-bold">2,500+</p>
-                <p className="text-blue-200">Active Listings</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur rounded-lg p-4">
-                <p className="text-3xl font-bold">98%</p>
-                <p className="text-blue-200">Client Satisfaction</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Side - Verification Form */}
-        <div className="flex-1 flex items-center justify-center p-8">
-          <div className="w-full max-w-md">
-            <button 
-              onClick={() => setNeedsVerification(false)}
-              className="flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-6"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to sign in
-            </button>
-            
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Verification Required</h2>
-            <p className="text-gray-600 mb-6">
-              Please check your email for a verification link or enter your 2FA code.
-            </p>
-            
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <p className="text-sm text-blue-800">
-                A verification code has been sent to <strong>{email}</strong>
-              </p>
-            </div>
-            
-            <form className="space-y-4">
-              <div>
-                <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-1">
-                  Verification Code
-                </label>
-                <input
-                  type="text"
-                  id="code"
-                  placeholder="Enter 6-digit code"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              
-              <button
-                type="button"
-                className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-              >
-                Verify
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Default Sign In View
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Left Side - Branding */}
@@ -221,10 +134,7 @@ export default function SignInPage() {
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                   Password
                 </label>
-                <Link 
-                  href="/forgot-password" 
-                  className="text-sm text-blue-600 hover:underline"
-                >
+                <Link href="/forgot-password" className="text-sm text-blue-600 hover:underline">
                   Forgot password?
                 </Link>
               </div>
@@ -246,11 +156,7 @@ export default function SignInPage() {
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
-                  {showPassword ? (
-                    <EyeOff className="w-5 h-5" />
-                  ) : (
-                    <Eye className="w-5 h-5" />
-                  )}
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
             </div>
@@ -260,21 +166,10 @@ export default function SignInPage() {
               disabled={loading}
               className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {loading ? (
-                <>
-                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  Signing in...
-                </>
-              ) : (
-                'Sign In'
-              )}
+              {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
 
-          {/* Divider */}
           <div className="relative my-8">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300" />
@@ -284,7 +179,6 @@ export default function SignInPage() {
             </div>
           </div>
 
-          {/* Social Login Buttons */}
           <div className="grid grid-cols-2 gap-3">
             <button className="flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
               <svg className="w-5 h-5" viewBox="0 0 24 24">
