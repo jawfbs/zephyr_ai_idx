@@ -157,25 +157,25 @@ export function Header({ favorites = [], onToggleFavorite }) {
               )}
             </div>
 
-            <Link 
-              href="/sell" 
-              className="text-gray-700 hover:text-blue-600 font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
-            >
-              Sell
-            </Link>
+//            <Link 
+//              href="/sell" 
+//              className="text-gray-700 hover:text-blue-600 font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 rounded // px-2 py-1"
+//            >
+//              Sell
+//            </Link>
             <Link 
               href="/rentals" 
               className="text-gray-700 hover:text-blue-600 font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
             >
               Rent
             </Link>
-            <Link 
-              href="/mortgage" 
-              className="text-gray-700 hover:text-blue-600 font-medium transition-colors flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
-            >
-              <Calculator className="w-4 h-4" aria-hidden="true" />
-              Mortgage Calculator
-            </Link>
+//            <Link 
+//              href="/mortgage" 
+//              className="text-gray-700 hover:text-blue-600 font-medium transition-colors flex items-center gap-1 focus:outline-none focus:ring-2 // focus:ring-blue-500 rounded px-2 py-1"
+//            >
+//              <Calculator className="w-4 h-4" aria-hidden="true" />
+//              Mortgage Calculator
+//            </Link>
           </div>
 
           {/* Actions */}
@@ -249,33 +249,33 @@ export function Header({ favorites = [], onToggleFavorite }) {
               
               <div className="border-t my-2" />
               
-              <Link 
-                href="/sell" 
-                className="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 rounded-lg"
-                role="menuitem"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <span className="text-xl" aria-hidden="true">🏷️</span>
-                <span>Sell</span>
-              </Link>
-              <Link 
+//              <Link 
+//                href="/sell" 
+//                className="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 rounded-lg"
+//                role="menuitem"
+//                onClick={() => setMobileMenuOpen(false)}
+//              >
+//                <span className="text-xl" aria-hidden="true">🏷️</span>
+//                <span>Sell</span>
+//              </Link>
+              <Link
                 href="/rentals" 
                 className="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 rounded-lg"
                 role="menuitem"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                <span className="text-xl" aria-hidden="true">🏠</span>
-                <span>Rent</span>
-              </Link>
-              <Link 
-                href="/mortgage" 
-                className="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 rounded-lg"
-                role="menuitem"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <Calculator className="w-5 h-5 text-gray-400" aria-hidden="true" />
-                <span>Mortgage Calculator</span>
-              </Link>
+//                <span className="text-xl" aria-hidden="true">🏠</span>
+//                <span>Rent</span>
+//              </Link>
+//              <Link 
+//                href="/mortgage" 
+//                className="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 rounded-lg"
+//                role="menuitem"
+//                onClick={() => setMobileMenuOpen(false)}
+//              >
+//                <Calculator className="w-5 h-5 text-gray-400" aria-hidden="true" />
+//                <span>Mortgage Calculator</span>
+//              </Link>
             </div>
           </div>
         )}
