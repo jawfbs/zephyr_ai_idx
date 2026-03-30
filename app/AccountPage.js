@@ -14,13 +14,13 @@ export default function AccountPage({ c, t, onClose }) {
   ]
 
   const [profile, setProfile] = useState({
-    firstName: 'Alex',
-    lastName:  'Johnson',
-    email:     'alex@example.com',
-    phone:     '+1 (701) 555-0100',
-    city:      'Fargo',
-    state:     'ND',
-    level:     'homebuyer',
+    firstName: '',
+    lastName:  '',
+    email:     '',
+    phone:     '',
+    city:      '',
+    state:     '',
+    level:     '',
   })
 
   const [saved, setSaved] = useState(false)
