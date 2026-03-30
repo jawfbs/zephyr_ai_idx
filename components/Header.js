@@ -111,7 +111,7 @@ export function Header({ favorites = [], onToggleFavorite }) {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link 
-            href="https://zephyr-ai-idx.vercel.app" 
+            href="/" 
             className="flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
             aria-label="ZephyrAI IDX - Go to homepage"
           >
