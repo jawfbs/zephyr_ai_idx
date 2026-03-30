@@ -271,14 +271,7 @@ export default function DashboardPage() {
             <Home className="w-8 h-8 text-blue-600" />
             <span className="text-xl font-bold text-gray-900">ZephyrAI IDX</span>
           </Link>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-500">
-              {role === 'homebuyer' && '🏠 Homebuyer'}
-              {role === 'agent' && '🏡 Agent'}
-              {role === 'team' && '👥 Team'}
-              {role === 'brokerage' && '🏢 Brokerage'}
-            </span>
-          </div>
+          
         </div>
       </header>
 
