@@ -109,16 +109,32 @@ export function Header({ favorites = [], onToggleFavorite }) {
         aria-label="Main navigation"
       >
         <div className="flex items-center justify-between">
-          {/* Logo */}
-          <Link 
-            href="/" 
-            className="flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
-            aria-label="ZephyrAI IDX - Go to homepage"
-          >
-            <Home className="w-8 h-8 text-blue-600" aria-hidden="true" />
-            <span className="text-2xl font-bold text-blue-900">ZephyrAI</span>
-            <span className="text-2xl font-light text-blue-600">IDX</span>
-          </Link>
+
+
+{/* Logo - This is what you need */}
+      <Link
+        href="/"                    // ← Best practice: use "/" for homepage
+        className="flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+        aria-label="ZephyrAI IDX - Go to homepage"
+      >
+        <Home className="w-8 h-8 text-blue-600" aria-hidden="true" />
+        <span className="text-2xl font-bold text-blue-900">ZephyrAI</span>
+        <span className="text-2xl font-light text-blue-600">IDX</span>
+      </Link>
+
+
+
+          
+//          {/* Logo */}
+//          <Link 
+//            href="/" 
+//            className="flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+//            aria-label="ZephyrAI IDX - Go to homepage"
+//          >
+//            <Home className="w-8 h-8 text-blue-600" aria-hidden="true" />
+//            <span className="text-2xl font-bold text-blue-900">ZephyrAI</span>
+//            <span className="text-2xl font-light text-blue-600">IDX</span>
+//          </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-8">
